@@ -1,0 +1,36 @@
+/* 自定義字體 */
+body { 
+    font-family: '微軟正黑體', 'Microsoft JhengHei', sans-serif; 
+    background-color: #f8fafc; 
+    color: #1e293b; 
+}
+
+/* 導航按鈕樣式 */
+.nav-item.active { 
+    background-color: #2563eb; 
+    color: white; 
+}
+.nav-item:hover:not(.active) { 
+    background-color: #e2e8f0; 
+}
+
+/* 輸入框統一樣式 */
+input, select { 
+    width: 100%; 
+    border: 1px solid #cbd5e1; 
+    padding: 6px; 
+    border-radius: 4px; 
+    text-align: right; 
+}
+input[type="text"], input[type="date"], select { 
+    text-align: left; 
+}
+
+/* 簡單的淡入動畫 */
+.fade-in { 
+    animation: fadeIn 0.3s ease-in-out; 
+}
+@keyframes fadeIn { 
+    from { opacity: 0; } 
+    to { opacity: 1; } 
+}

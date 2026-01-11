@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>個人資金投資管理系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex z-10 overflow-y-auto">
+        <div class="p-6 border-b border-slate-100">
+            <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <i class="ri-funds-box-fill text-blue-600"></i> 資金管理
+            </h1>
+        </div>
+        <nav class="flex-1 p-4 space-y-1">
+            <!-- 主要功能區 -->
+            <div class="space-y-1 mb-6">
+                <div class="px-3 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">投資概況</div>
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left font-medium text-sm"><i class="ri-dashboard-line text-lg"></i> 總覽看板</button>
+                <button onclick="switchTab('portfolio')" id="nav-portfolio" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left font-medium text-sm"><i class="ri-pie-chart-2-line text-lg"></i> 投資組合</button>
+                <button onclick="switchTab('analysis')" id="nav-analysis" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left font-medium text-sm"><i class="ri-bar-chart-grouped-line text-lg"></i> 配息分析</button>
+                <button onclick="switchTab('transactions')" id="nav-transactions" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left font-medium text-sm"><i class="ri-history-line text-lg"></i> 交易記錄</button>
+            </div>
+
+            <!-- 管理與工具區 -->
+            <div class="space-y-1">
+                <div class="px-3 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mt-6">後台管理</div>
+                
+                <!-- 數據管理 (主入口) -->
+                <button onclick="switchTab('management')" id="nav-management" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left font-medium text-sm hover:bg-slate-50">
+                    <i class="ri-database-2-line text-lg"></i> 基礎數據管理
+                </button>
+                
+                <!-- 股利政策 -->
+                <button onclick="switchTab('div-settings')" id="nav-div-settings" class="nav-item w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-left text-sm text-slate-600 hover:text-purple-700 hover:bg-purple-50">
+                    <i class="ri-hand-coin-line"></i> 股利政策設定
+                </button>
+                
+                <!-- 證交所行情 -->
+                <button onclick="switchTab('twse')" id="nav-twse" class="nav-item w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-left text-sm text-slate-600 hover:text-teal-700 hover:bg-teal-50">
+                    <i class="ri-search-stock-line"></i> 證交所行情
+                </button>
+
+                <!-- 子功能區塊 (內縮) -->
+                <!-- <div class="pl-4 mt-1 space-y-1 border-l-2 border-slate-100 ml-4">
+                    <button onclick="switchTab('div-settings')" id="nav-div-settings" class="nav-item w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-left text-sm text-slate-600 hover:text-purple-700 hover:bg-purple-50">
+                        <i class="ri-hand-coin-line"></i> 股利政策設定
+                    </button>
+                    
+                    <button onclick="switchTab('twse')" id="nav-twse" class="nav-item w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-left text-sm text-slate-600 hover:text-teal-700 hover:bg-teal-50">
+                        <i class="ri-search-stock-line"></i> 證交所行情
+                    </button>
+                </div> -->
+            </div>
+        </nav>
+        
+        <!-- 底部版權/資訊 -->
+        <div class="p-4 border-t border-slate-100 text-xs text-slate-400 text-center">
+            v2.0 Personal Edition
+        </div>
+    </aside>
+
+    <!-- Mobile Header -->
+    <div class="md:hidden fixed top-0 w-full bg-white shadow p-4 z-20 flex justify-between items-center">
+        <h1 class="font-bold text-lg"><i class="ri-funds-box-fill text-blue-600"></i> 資金管理</h1>
+        <button onclick="switchTab('management')" class="p-2"><i class="ri-settings-4-line text-xl"></i></button>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 mt-16 md:mt-0 bg-slate-50">
+        
+        <!-- 1. Dashboard -->
+        <div id="view-dashboard" class="page-view fade-in">
+            <!-- (保持原本內容) -->
+            <h2 class="text-2xl font-bold mb-6">資產總覽</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 md:col-span-2">
+                    <div class="flex justify-between items-center mb-4"><h3 class="text-slate-500 font-medium">總計會投入資金 (P22)</h3><div class="text-2xl font-bold text-slate-800" id="dash-p22">0</div></div>
+                    <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4"><div><div class="text-xs text-slate-400">已買入金額 (P21)</div><div class="text-lg font-bold text-blue-600" id="dash-p21">0</div><div class="text-xs text-slate-400 mt-1">來自交易記錄累計</div></div><div><div class="text-xs text-slate-400">待投入金額 (P20)</div><div class="text-lg font-bold text-orange-500" id="dash-p20">0</div><div class="text-xs text-slate-400 mt-1">預估股數 × 現價</div></div></div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-blue-100 bg-blue-50 space-y-4"><div><h3 class="text-blue-600 text-xs font-bold uppercase">總預算</h3><div class="text-xl font-bold text-slate-700" id="dash-budget">0</div></div><div class="border-t border-blue-200 pt-2"><h3 class="text-blue-600 text-xs font-bold uppercase">剩餘閒置資金</h3><div class="text-2xl font-bold text-blue-700" id="dash-remaining">0</div><div class="text-xs text-blue-400 mt-1">公式：總預算 - P22</div></div></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6"><div class="bg-white p-6 rounded-xl shadow-sm border border-orange-50 bg-orange-50/50 md:col-span-4 lg:col-span-1"><h3 class="text-orange-600 text-sm font-medium mb-2">預估總年股利</h3><div class="text-3xl font-bold text-orange-700" id="dash-dividend-total">0</div><div class="mt-4 space-y-2"><div class="flex justify-between text-sm"><span class="text-slate-500">現有持股:</span><span class="font-bold text-slate-700" id="dash-dividend-cur">0</span></div><div class="flex justify-between text-sm"><span class="text-slate-500">預估:</span><span class="font-bold text-orange-500" id="dash-dividend-add">0</span></div><div class="pt-2 border-t border-orange-200 text-xs text-right text-orange-400" id="dash-yield">--%</div></div></div><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-80 md:col-span-2 lg:col-span-1"><h3 class="font-bold mb-4">資產配置 (已買入)</h3><div class="h-60 relative"><canvas id="chart-pie"></canvas></div></div><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-80 md:col-span-2 lg:col-span-2"><h3 class="font-bold mb-4">每月現金流</h3><div class="h-60 relative"><canvas id="chart-bar"></canvas></div></div></div>
+        </div>
+
+        <!-- 2. Portfolio -->
+        <div id="view-portfolio" class="page-view hidden fade-in">
+            <!-- (保持原本內容) -->
+            <h2 class="text-2xl font-bold mb-6">投資組合清單</h2><div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto"><table class="w-full text-left whitespace-nowrap"><thead class="bg-slate-50 text-slate-600 text-sm font-bold border-b border-slate-200"><tr><th class="p-4">代號</th><th class="p-4">名稱</th><th class="p-4 text-right">持有股數</th><th class="p-4 text-right">預估</th><th class="p-4 text-right">總成本</th><th class="p-4 text-right">現價</th><th class="p-4 text-right">市值</th><th class="p-4 text-right">損益</th></tr></thead><tbody id="table-portfolio-body" class="divide-y divide-slate-100 text-sm"></tbody></table></div>
+        </div>
+
+        <!-- 3. Dividend Settings -->
+        <div id="view-div-settings" class="page-view hidden fade-in">
+            <h2 class="text-2xl font-bold mb-6">最新股利政策詳細設定</h2>
+            <p>*有異動請務必在關閉瀏覽器前至「基礎數據管理匯出data.js」</p>
+            <div class="grid grid-cols-1 gap-6" id="div-settings-container"></div>
+        </div>
+
+        <!-- 4. Analysis -->
+        <div id="view-analysis" class="page-view hidden fade-in">
+            <!-- (保持原本內容) -->
+            <h2 class="text-2xl font-bold mb-6">配息分析 (含預估)</h2><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-6"><div class="h-80 w-full relative"><canvas id="chart-bar-detail"></canvas></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="analysis-cards"></div>
+        </div>
+
+        <!-- 5. Transactions -->
+        <div id="view-transactions" class="page-view hidden fade-in">
+            <!-- (保持原本內容) -->
+            <h2 class="text-2xl font-bold mb-6">交易記錄</h2>
+            <div class="bg-blue-50 p-4 rounded-xl mb-6 border border-blue-100">
+                <h3 class="font-bold text-blue-800 mb-3 text-sm flex items-center gap-2">
+                    <i class="ri-add-circle-line"></i> 新增交易
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+                    <input type="date" id="tx-date" class="bg-white">
+                    <select id="tx-code" class="bg-white"></select>
+                    <select id="tx-type" class="bg-white">
+                        <option value="Buy">買入</option><option value="Sell">賣出</option>
+                    </select><input type="number" id="tx-shares" placeholder="股數" class="bg-white">
+                    <input type="number" id="tx-price" placeholder="單價" class="bg-white">
+                    <button onclick="addTransaction()" class="bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors">新增</button>
+                </div></div>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+                    <table class="w-full text-left whitespace-nowrap">
+                        <thead class="bg-slate-50 text-slate-600 text-sm font-bold border-b border-slate-200">
+                            <tr>
+                                <th class="p-4">日期</th>
+                                <th class="p-4">代號</th>
+                                <th class="p-4">類別</th>
+                                <th class="p-4 text-right">股數</th>
+                                <th class="p-4 text-right">成交價</th>
+                                <th class="p-4 text-right">總金額</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-transactions-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                        
+                        <!-- 新增：表格尾端合計列 -->
+                        <tfoot class="bg-slate-50 border-t border-slate-200 font-bold text-slate-700">
+                            <tr>
+                                <td colspan="5" class="p-4 text-right">交易總計金額：</td>
+                                <td class="p-4 text-right text-blue-600" id="tx-total-amount">0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+        </div>
+
+        <!-- NEW: TWSE Query (證交所查詢頁面) -->
+        <div id="view-twse" class="page-view hidden fade-in">
+            <h2 class="text-2xl font-bold mb-6">證交所 ETF/個股 日成交資訊</h2>
+            <p>資料更新:T - 1 營業日</p>
+            <!-- 查詢區塊 -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">查詢類型</label>
+                        <select id="apiType" class="w-full border rounded px-3 py-2">
+                            <option value="etf">ETF 日成交資訊</option>
+                            <option value="stock">個股日成交資訊</option>
+                        </select>
+                    </div>
+                    
+                    <div id="stockCodeGroup" style="display:none;">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">股票代號</label>
+                        <input type="text" id="stockCode" placeholder="例如: 0050" class="w-full border rounded px-3 py-2 text-left">
+                    </div>
+                    
+                    <div id="dateGroup" style="display:none;">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">查詢日期</label>
+                        <input type="date" id="queryDate" class="w-full border rounded px-3 py-2 text-left">
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button id="queryBtn" onclick="fetchTwseData()" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded flex-1"><i class="ri-search-line"></i> 查詢</button>
+                        <button onclick="clearTwseResults()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded"><i class="ri-delete-bin-line"></i> 清除</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 狀態顯示 -->
+            <div id="twse-loading" class="hidden text-center p-4 text-gray-500"><i class="ri-loader-4-line animate-spin"></i> 資料載入中，請稍候...</div>
+            <div id="twse-message" class="mb-4"></div>
+
+            <!-- 統計資訊 -->
+            <div id="twse-stats" class="hidden grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-teal-50 p-4 rounded-lg border border-teal-100 text-center">
+                    <div class="text-xs text-teal-600">總筆數</div>
+                    <div class="text-xl font-bold text-teal-800" id="totalCount">0</div>
+                </div>
+                <div class="bg-teal-50 p-4 rounded-lg border border-teal-100 text-center">
+                    <div class="text-xs text-teal-600">總成交金額</div>
+                    <div class="text-xl font-bold text-teal-800" id="totalAmount">0</div>
+                </div>
+            </div>
+
+            <!-- 結果表格 -->
+            <div id="twse-results" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto overflow-y-auto max-h-[70vh] hidden relative"></div>
+        </div>
+
+        <!-- 6. Management -->
+        <div id="view-management" class="page-view hidden fade-in">
+            <!-- (保持原本內容) -->
+            <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold">數據管理</h2><div class="flex gap-2">
+                <button onclick="reloadDataFromFile()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm transition-colors flex items-center gap-2">
+                    <i class="ri-refresh-line"></i> 刷新重置
+                </button><button onclick="exportDataFile()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow text-sm transition-colors flex items-center gap-2"><i class="ri-save-3-line"></i> 匯出 data.js 存檔</button></div></div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-6">
+                    <label class="block text-sm font-bold mb-2">總投資預算</label>
+                    <div class="flex items-center gap-2 border-b-2 border-blue-500 pb-1 w-64">
+                        <span class="font-bold text-slate-400">NT\$</span>
+                        <input type="number" id="input-budget" class="border-none outline-none text-xl font-bold text-left p-0" onchange="updateBudget(this.value)">
+                    </div></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+                        <h3 class="font-bold mb-4">持股參數編輯</h3><table class="w-full min-w-[900px]">
+                            <thead class="bg-slate-100 text-xs uppercase font-bold text-slate-600">
+                                <tr>
+                                    <th class="p-3 text-left">代號</th>
+                                    <th class="p-3 text-left">名稱</th>
+                                    <th class="p-3 text-right">現有股數</th>
+                                    <th class="p-3 text-right bg-orange-50 text-orange-700">預估</th>
+                                    <th class="p-3 text-right">成本</th>
+                                    <th class="p-3 text-right">平均成本</th> <!-- 新增這一行 -->
+                                    <th class="p-3 text-right">年股利</th>
+                                    <th class="p-3 text-right">現價</th>
+                                    <th class="p-3 text-left">配息月</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-management-body" class="divide-y divide-slate-100 text-sm"></tbody></table></div>
+        </div>
+        
+        <!-- Mobile Nav -->
+        <div class="md:hidden fixed bottom-0 w-full bg-white border-t border-slate-200 flex justify-around p-2 z-40 pb-4">
+            <button onclick="switchTab('dashboard')" class="text-slate-500"><i class="ri-dashboard-line text-xl"></i></button>
+            <button onclick="switchTab('portfolio')" class="text-slate-500"><i class="ri-pie-chart-2-line text-xl"></i></button>
+            <button onclick="switchTab('twse')" class="text-teal-600"><i class="ri-search-stock-line text-xl"></i></button> <!-- NEW -->
+            <button onclick="switchTab('analysis')" class="text-slate-500"><i class="ri-bar-chart-grouped-line text-xl"></i></button>
+        </div>
+    </main>
+
+    <!-- JS Files -->
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
