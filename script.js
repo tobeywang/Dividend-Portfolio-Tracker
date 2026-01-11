@@ -597,6 +597,41 @@ function switchTab(t) {
     else if(t==='management') renderManagement();
 }
 
+// --- 7.手機版下拉選單控制邏輯 ---
+
+// 1. 切換選單顯示/隱藏
+function toggleMobileMenu() {
+    const menu = document.getElementById('mobile-menu-dropdown');
+    if (menu) {
+        menu.classList.toggle('hidden');
+    }
+}
+
+// 2. 點擊選項後：執行換頁並關閉選單
+function switchTabMobile(tabName) {
+    // 執行原本的換頁邏輯
+    switchTab(tabName);
+    
+    // 強制關閉下拉選單
+    const menu = document.getElementById('mobile-menu-dropdown');
+    if (menu) {
+        menu.classList.add('hidden');
+    }
+}
+
+// 3. (選用) 點擊畫面其他地方時關閉選單
+window.addEventListener('click', function(e) {
+    const menu = document.getElementById('mobile-menu-dropdown');
+    const btn = document.querySelector('button[onclick="toggleMobileMenu()"]'); // 抓取觸發按鈕
+    
+    // 如果點擊的目標不是選單本身，也不是觸發按鈕，就關閉選單
+    if (menu && !menu.classList.contains('hidden')) {
+        if (!menu.contains(e.target) && !btn.contains(e.target)) {
+            menu.classList.add('hidden');
+        }
+    }
+});
+
 window.addEventListener('DOMContentLoaded', () => { 
     const dateInput = document.getElementById('tx-date');
     if(dateInput) dateInput.valueAsDate = new Date();
