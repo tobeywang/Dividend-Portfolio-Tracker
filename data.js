@@ -7,7 +7,7 @@ const DEFAULT_DATA = {
             "name": "元大台灣50",
             "cost": 272155,
             "shares": 7000,
-            "estShares": 2000,
+            "estShares": 1000,
             "div": 1.7,
             "divs": [
                 1,
@@ -91,7 +91,7 @@ const DEFAULT_DATA = {
             "name": "元大高股息",
             "cost": 148998,
             "shares": 4000,
-            "estShares": 11000,
+            "estShares": 10000,
             "div": 3.668,
             "divs": [
                 0.866,
