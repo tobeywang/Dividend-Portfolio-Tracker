@@ -38,6 +38,64 @@ function exportDataFile() {
 function resetData() {
     if(confirm("確定重置？")) { localStorage.removeItem(STORAGE_KEY); location.reload(); }
 }
+/**
+ * 處理檔案匯入的函式
+ * @param {HTMLInputElement} inputElement 
+ */
+function importDataFunc(inputElement) {
+    const file = inputElement.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    // 當檔案讀取完成後觸發
+    reader.onload = function(e) {
+        const fileContent = e.target.result;
+
+        try {
+            // 1. 處理字串：原本匯出的格式是 "const DEFAULT_DATA = { ... };"
+            // 我們使用 Regex 去除開頭的 "const 變數名 =" 以及結尾的分號
+            let jsonString = fileContent
+                .replace(/^\s*const\s+\w+\s*=\s*/, '') // 去除開頭的變數宣告
+                .replace(/;\s*$/, '');                 // 去除結尾的分號(如果有的話)
+
+            // 2. 解析 JSON
+            const newData = JSON.parse(jsonString);
+
+            // 3. 基本驗證：確保匯入的資料結構正確 (檢查是否有 portfolio 欄位)
+            if (newData && Array.isArray(newData.portfolio)) {
+                
+                // 4. 確認視窗 (防止誤按)
+                if(!confirm(`確定要匯入並覆蓋目前的資料嗎？\n(將載入 ${newData.portfolio.length} 筆持股資料)`)) {
+                    inputElement.value = ''; // 清空選擇
+                    return;
+                }
+
+                // 5. 更新全域變數與 LocalStorage
+                appData = newData;
+                saveData(); // 呼叫您既有的存檔函式
+                
+                // 6. 重新渲染畫面
+                renderAll(); // 呼叫您既有的全域渲染函式
+                
+                alert("匯入成功！");
+            } else {
+                throw new Error("檔案內容缺少必要的 portfolio 資料結構");
+            }
+
+        } catch (err) {
+            console.error(err);
+            alert("匯入失敗：檔案格式不正確。\n請確保您匯入的是由本系統匯出的 data.js 檔案。");
+        }
+        
+        // 清空 input 值，這樣如果使用者再次選取同一個檔案也能觸發 onchange
+        inputElement.value = '';
+    };
+
+    // 開始以文字模式讀取檔案
+    reader.readAsText(file);
+}
+
 
 var appData = loadData();
 var charts = { pie: null, bar: null, detailBar: null };
@@ -50,8 +108,24 @@ function calcStats() {
     let chartDataSets = [];
 
     // 1. P21: 交易紀錄
-    if (appData.transactions && appData.transactions.length > 0) {
-        tP21 = appData.transactions.reduce((sum, t) => sum + Number(t.total), 0);
+    // 計算股票交易總額 (假設原本邏輯如下)
+    if (appData.transactions) {
+        appData.transactions.forEach(t => {
+            // 假設您的股票 Buy 是正向投入
+            if(t.type === 'Buy') tP21 += Number(t.total);
+            // 如果有賣出邏輯，通常是減去賣出金額 tP21 -= Number(t.total);
+        });
+    }
+    // --- ★ 新增：加入基金交易對 P21 的影響 ---
+    if (appData.fundTransactions) {
+        appData.fundTransactions.forEach(ft => {
+            const val = Number(ft.total);
+            if (ft.type === 'Buy') {
+                tP21 += val; // 申購：增加已買入金額
+            } else if (ft.type === 'Sell' || ft.type === 'Div') {
+                tP21 -= val; // 贖回或配息：減少已買入金額 (視為資金回收)
+            }
+        });
     }
 
     // 2. P20 & Div: Portfolio
@@ -369,6 +443,111 @@ function renderManagement() {
         </tr>`;
     }).join('');
 }
+// --- 基金功能區 ---
+
+function addFundTransaction() {
+    const date = document.getElementById('ft-date').value;
+    const name = document.getElementById('ft-name').value;
+    const type = document.getElementById('ft-type').value;
+    
+    // ★ 新增：抓取淨值 (nav)
+    const nav = Number(document.getElementById('ft-nav').value) || 0;
+    
+    let amount = Number(document.getElementById('ft-amount').value) || 0;
+    let units = Number(document.getElementById('ft-units').value) || 0;
+    const fee = Number(document.getElementById('ft-fee').value) || 0;
+
+    // --- 自動補算邏輯 (Optional) ---
+    // 如果有輸入「金額」跟「淨值」，但沒輸入「單位數」，自動算出單位數
+    if (amount > 0 && nav > 0 && units === 0) {
+        units = Number((amount / nav).toFixed(2)); // 通常基金單位數取小數點後2位
+    }
+    // 如果有輸入「單位數」跟「淨值」，但沒輸入「金額」，自動算出金額
+    else if (units > 0 && nav > 0 && amount === 0) {
+        amount = Math.round(units * nav);
+    }
+    // -----------------------------
+
+    if (!date || !name || amount <= 0) {
+        alert("請至少填寫日期、名稱與金額 (或透過淨值與單位數自動計算)");
+        return;
+    }
+
+    // 計算總金額 (維持不變)
+    let total = 0;
+    if (type === 'Buy') total = amount + fee;      // 申購支出
+    else if (type === 'Sell') total = amount - fee; // 贖回實拿
+    else total = amount;                            // 配息
+
+    if (!appData.fundTransactions) appData.fundTransactions = [];
+    
+    // ★ 寫入資料時加入 nav
+    appData.fundTransactions.unshift({
+        id: Date.now(),
+        date, name, type, nav, units, amount, fee, total
+    });
+
+    saveData();
+    renderAll();
+    
+    // 清空輸入框
+    document.getElementById('ft-name').value = '';
+    document.getElementById('ft-nav').value = '';     // ★ 清空淨值
+    document.getElementById('ft-units').value = '';
+    document.getElementById('ft-amount').value = '';
+    document.getElementById('ft-fee').value = '';
+}
+
+function renderFundTransactions() {
+    const tbody = document.getElementById('table-fund-body');
+    const tfoot = document.getElementById('fund-total-amount');
+    if (!tbody) return;
+
+    if (!appData.fundTransactions) appData.fundTransactions = [];
+
+    let netFundInvested = 0;
+
+    const html = appData.fundTransactions.map((t, idx) => {
+        if (t.type === 'Buy') netFundInvested += t.total;
+        if (t.type === 'Sell') netFundInvested -= t.total;
+        if (t.type === 'Div') netFundInvested -= t.total;
+
+        const typeBadge = t.type === 'Buy' 
+            ? '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">申購</span>'
+            : (t.type === 'Sell' 
+                ? '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">贖回</span>'
+                : '<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs font-bold">配息</span>');
+
+        // ★ 處理淨值顯示 (如果沒有值就顯示 -)
+        const displayNav = (t.nav && t.nav > 0) ? Number(t.nav).toFixed(4) : '-';
+
+        return `<tr class="hover:bg-slate-50 border-b border-gray-50">
+            <td class="p-3 text-slate-500">${t.date}</td>
+            <td class="p-3 font-bold text-slate-700">${t.name}</td>
+            <td class="p-3">${typeBadge}</td>
+            <td class="p-3 text-right">${fmt(t.amount)}</td>
+            <td class="p-3 text-right font-mono text-slate-600">${displayNav}</td>
+            <td class="p-3 text-right">${t.units || '-'}</td>
+            <td class="p-3 text-right text-slate-400">${t.fee > 0 ? fmt(t.fee) : '-'}</td>
+            <td class="p-3 text-right font-bold text-slate-800">${fmt(t.total)}</td>
+            <td class="p-3">
+                <button onclick="deleteFundTx(${idx})" class="text-red-400 hover:text-red-600">✕</button>
+            </td>
+        </tr>`;
+    }).join('');
+
+    tbody.innerHTML = html;
+    if (tfoot) tfoot.innerText = fmt(netFundInvested);
+}
+
+function deleteFundTx(idx) {
+    if(confirm("確定刪除此筆基金記錄？")) {
+        appData.fundTransactions.splice(idx, 1);
+        saveData();
+        renderAll();
+    }
+}
+// ------------------
 
 // --- 新增功能：強制從 data.js 檔案重新載入 ---
 function reloadDataFromFile() {
@@ -448,6 +627,9 @@ async function fetchTwseData() {
 
         // 4. 顯示結果
         displayTwseResults(filteredData, apiType);
+
+        // 5.自動將查詢結果同步回持股設定
+        syncPricesToPortfolio(filteredData);
 
     } catch (err) {
         msgDiv.innerHTML = `<div class="bg-red-50 text-red-600 p-3 rounded text-sm border border-red-200">查詢失敗：${err.message}</div>`;
@@ -566,6 +748,62 @@ function clearTwseResults() {
     document.getElementById('twse-stats').classList.add('hidden');
 }
 
+/**
+ * 將查詢到的證交所資料同步到持股參數設定的「現價」
+ * @param {Array} data - API 回傳並過濾後的股票/ETF陣列
+ */
+function syncPricesToPortfolio(data) {
+    if (!appData || !appData.portfolio) return;
+
+    let updateCount = 0;
+    
+    // 1. 建立代號與價格的對照表 (Map)，加速比對
+    // 考慮到 API 欄位可能不同，使用與 displayTwseResults 相同的邏輯抓取價格
+    const priceMap = {};
+    
+    data.forEach(item => {
+        const code = item.c || item.Code || item.code; // 代號
+        // 嘗試解析價格 (z:最新成交, Price:一般欄位, ClosingPrice:收盤)
+        const rawPrice = item.z || item.Price || item.ClosingPrice;
+        const price = parseFloat(rawPrice);
+        
+        // 只有當代號存在且價格為有效數字時才記錄
+        if (code && !isNaN(price)) {
+            priceMap[code] = price;
+        }
+    });
+
+    // 2. 遍歷目前的持股清單，若代號吻合則更新現價
+    appData.portfolio.forEach(p => {
+        // 注意：這裡假設您的 p.code 與 API 回傳的格式一致 (皆為字串)
+        if (priceMap[p.code] !== undefined) {
+            // 若價格有變動才更新 (可選)
+            if (p.price !== priceMap[p.code]) {
+                p.price = priceMap[p.code];
+                updateCount++;
+            }
+        }
+    });
+
+    // 3. 如果有更新數據，執行存檔並刷新畫面
+    if (updateCount > 0) {
+        saveData(); // 儲存到 localStorage
+        
+        // 重新渲染畫面
+        if (typeof renderAll === 'function') {
+            renderAll(); // 如果有主渲染函式
+        } else {
+            renderManagement(); // 或是只渲染管理介面
+        }
+        
+        // 顯示提示訊息 (可選)
+        const msgDiv = document.getElementById('twse-message');
+        if (msgDiv) {
+            msgDiv.innerHTML += `<div class="mt-2 text-green-600 font-bold">★ 已自動更新 ${updateCount} 支持股的現價資訊！</div>`;
+        }
+    }
+}
+
 // --- 6. 全局初始化 ---
 function renderAll() { 
     renderDashboard(); 
@@ -574,6 +812,7 @@ function renderAll() {
     renderAnalysis(); 
     renderTransactions(); 
     renderManagement(); 
+    renderFundTransactions(); // ★ 新增：渲染基金表
 }
 
 function switchTab(t) {
@@ -593,7 +832,11 @@ function switchTab(t) {
     else if(t==='portfolio') renderPortfolio();
     else if(t==='div-settings') renderDivSettings();
     else if(t==='analysis') renderAnalysis(); 
-    else if(t==='transactions') renderTransactions();
+    else if(t==='transactions') 
+    {
+        renderTransactions();
+        renderFundTransactions();
+    }
     else if(t==='management') renderManagement();
 }
 

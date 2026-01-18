@@ -206,30 +206,102 @@
                     </select><input type="number" id="tx-shares" placeholder="股數" class="bg-white">
                     <input type="number" id="tx-price" placeholder="單價" class="bg-white">
                     <button onclick="addTransaction()" class="bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors">新增</button>
-                </div></div>
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
-                    <table class="w-full text-left whitespace-nowrap">
-                        <thead class="bg-slate-50 text-slate-600 text-sm font-bold border-b border-slate-200">
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+                <table class="w-full text-left whitespace-nowrap">
+                    <thead class="bg-slate-50 text-slate-600 text-sm font-bold border-b border-slate-200">
+                        <tr>
+                            <th class="p-4">日期</th>
+                            <th class="p-4">代號</th>
+                            <th class="p-4">類別</th>
+                            <th class="p-4 text-right">股數</th>
+                            <th class="p-4 text-right">成交價</th>
+                            <th class="p-4 text-right">總金額</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-transactions-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                    
+                    <!-- 新增：表格尾端合計列 -->
+                    <tfoot class="bg-slate-50 border-t border-slate-200 font-bold text-slate-700">
+                        <tr>
+                            <td colspan="5" class="p-4 text-right">交易總計金額：</td>
+                            <td class="p-4 text-right text-blue-600" id="tx-total-amount">0</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- === 新增區塊：基金交易 === -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-6">
+                <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center">
+                    <span class="bg-purple-100 text-purple-600 p-2 rounded-lg mr-3">💰</span>
+                    基金交易記錄
+                </h2>
+
+                <!-- 基金輸入區 -->
+                <!-- 修改後的輸入區塊 -->
+                <div class="grid grid-cols-1 md:grid-cols-8 gap-3 mb-4 bg-slate-50 p-4 rounded-lg">
+                    <!-- 1. 日期 -->
+                    <input type="date" id="ft-date" class="border border-gray-300 rounded px-2 py-2 text-sm">
+                    
+                    <!-- 2. 名稱 (稍微縮小跨欄，騰出空間給淨值) -->
+                    <input type="text" id="ft-name" placeholder="基金名稱" class="border border-gray-300 rounded px-2 py-2 text-sm md:col-span-2">
+                    
+                    <!-- 3. 類別 -->
+                    <select id="ft-type" class="border border-gray-300 rounded px-2 py-2 text-sm">
+                        <option value="Buy">申購 (Buy)</option>
+                        <option value="Sell">贖回 (Sell)</option>
+                        <option value="Div">配息 (Div)</option>
+                    </select>
+
+                    <!-- 4. ★ 新增：淨值 (Nav) -->
+                    <input type="number" id="ft-nav" placeholder="淨值" step="0.0001" class="border border-gray-300 rounded px-2 py-2 text-sm">
+
+                    <!-- 5. 單位數 -->
+                    <input type="number" id="ft-units" placeholder="單位數" class="border border-gray-300 rounded px-2 py-2 text-sm">
+
+                    <!-- 6. 金額 -->
+                    <input type="number" id="ft-amount" placeholder="交易金額" class="border border-gray-300 rounded px-2 py-2 text-sm">
+
+                    <!-- 7. 手續費 -->
+                    <input type="number" id="ft-fee" placeholder="手續費" class="border border-gray-300 rounded px-2 py-2 text-sm">
+                    
+                    <button onclick="addFundTransaction()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded md:col-span-8 transition">
+                        新增
+                    </button>
+                </div>
+
+
+                <!-- 基金列表 Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-100 text-slate-600 text-sm">
                             <tr>
-                                <th class="p-4">日期</th>
-                                <th class="p-4">代號</th>
-                                <th class="p-4">類別</th>
-                                <th class="p-4 text-right">股數</th>
-                                <th class="p-4 text-right">成交價</th>
-                                <th class="p-4 text-right">總金額</th>
+                                <th class="p-3 rounded-tl-lg">日期</th>
+                                <th class="p-3">基金名稱</th>
+                                <th class="p-3">類別</th>
+                                <th class="p-3 text-right">申購/贖回金額</th>
+                                <th class="p-3 text-right">淨值</th> <!-- ★ 新增這一行 -->
+                                <th class="p-3 text-right">單位數</th>
+                                <th class="p-3 text-right">手續費</th>
+                                <th class="p-3 text-right rounded-tr-lg">總金額 (含費)</th>
+                                <th class="p-3">操作</th>
                             </tr>
                         </thead>
-                        <tbody id="table-transactions-body" class="divide-y divide-slate-100 text-sm"></tbody>
-                        
-                        <!-- 新增：表格尾端合計列 -->
-                        <tfoot class="bg-slate-50 border-t border-slate-200 font-bold text-slate-700">
+                        <tbody id="table-fund-body" class="text-sm divide-y divide-gray-100">
+                            <!-- JS 自動生成內容 -->
+                        </tbody>
+                        <tfoot class="bg-slate-50 font-bold text-slate-700">
                             <tr>
-                                <td colspan="5" class="p-4 text-right">交易總計金額：</td>
-                                <td class="p-4 text-right text-blue-600" id="tx-total-amount">0</td>
+                                <td colspan="6" class="p-3 text-right">基金淨投入總計：</td>
+                                <td class="p-3 text-right text-purple-600" id="fund-total-amount">0</td>
+                                <td></td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
+            </div>
         </div>
 
         <!-- NEW: TWSE Query (證交所查詢頁面) -->
@@ -290,29 +362,49 @@
             <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold">數據管理</h2><div class="flex gap-2">
                 <button onclick="reloadDataFromFile()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm transition-colors flex items-center gap-2">
                     <i class="ri-refresh-line"></i> 刷新重置
-                </button><button onclick="exportDataFile()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow text-sm transition-colors flex items-center gap-2"><i class="ri-save-3-line"></i> 匯出 data.js 存檔</button></div></div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-6">
-                    <label class="block text-sm font-bold mb-2">總投資預算</label>
-                    <div class="flex items-center gap-2 border-b-2 border-blue-500 pb-1 w-64">
-                        <span class="font-bold text-slate-400">NT\$</span>
-                        <input type="number" id="input-budget" class="border-none outline-none text-xl font-bold text-left p-0" onchange="updateBudget(this.value)">
-                    </div></div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
-                        <h3 class="font-bold mb-4">持股參數編輯</h3><table class="w-full min-w-[900px]">
-                            <thead class="bg-slate-100 text-xs uppercase font-bold text-slate-600">
-                                <tr>
-                                    <th class="p-3 text-left">代號</th>
-                                    <th class="p-3 text-left">名稱</th>
-                                    <th class="p-3 text-right">現有股數</th>
-                                    <th class="p-3 text-right bg-orange-50 text-orange-700">預估</th>
-                                    <th class="p-3 text-right">成本</th>
-                                    <th class="p-3 text-right">平均成本</th> <!-- 新增這一行 -->
-                                    <th class="p-3 text-right">年股利</th>
-                                    <th class="p-3 text-right">現價</th>
-                                    <th class="p-3 text-left">配息月</th>
-                                </tr>
-                            </thead>
-                            <tbody id="table-management-body" class="divide-y divide-slate-100 text-sm"></tbody></table></div>
+                </button>
+                <button onclick="exportDataFile()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow text-sm transition-colors flex items-center gap-2">
+                    <i class="ri-save-3-line"></i> 匯出 data.js 存檔
+                </button>
+                <!-- 隱藏的檔案輸入框，設定 accept 為 .js 或 .json -->
+                <input type="file" id="import-input" style="display: none" accept=".js,.json,.txt" onchange="importDataFunc(this)">
+
+                <!-- 匯入按鈕：點擊時觸發上面的 input -->
+                <button onclick="document.getElementById('import-input').click()" 
+                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow transition">
+                    匯入 data.js
+                </button>
+            </div>
+        </div>
+                
+
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-6">
+            <label class="block text-sm font-bold mb-2">總投資預算</label>
+            <div class="flex items-center gap-2 border-b-2 border-blue-500 pb-1 w-64">
+                <span class="font-bold text-slate-400">NT\$</span>
+                <input type="number" id="input-budget" class="border-none outline-none text-xl font-bold text-left p-0" onchange="updateBudget(this.value)">
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+            <h3 class="font-bold mb-4">持股參數編輯</h3>
+            <table class="w-full min-w-[900px]">
+                <thead class="bg-slate-100 text-xs uppercase font-bold text-slate-600">
+                    <tr>
+                        <th class="p-3 text-left">代號</th>
+                        <th class="p-3 text-left">名稱</th>
+                        <th class="p-3 text-right">現有股數</th>
+                        <th class="p-3 text-right bg-orange-50 text-orange-700">預估</th>
+                        <th class="p-3 text-right">成本</th>
+                        <th class="p-3 text-right">平均成本</th> <!-- 新增這一行 -->
+                        <th class="p-3 text-right">年股利</th>
+                        <th class="p-3 text-right">現價</th>
+                        <th class="p-3 text-left">配息月</th>
+                    </tr>
+                </thead>
+                <tbody id="table-management-body" class="divide-y divide-slate-100 text-sm">
+
+                </tbody>
+            </table>
         </div>
         
         <!-- Mobile Nav -->

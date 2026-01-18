@@ -8,12 +8,12 @@ const DEFAULT_DATA = {
             "cost": 272155,
             "shares": 7000,
             "estShares": 2000,
-            "div": 2.17,
+            "div": 1.7,
             "divs": [
-                1.47,
+                1,
                 0.7
             ],
-            "price": 69,
+            "price": 72,
             "months": "1,7"
         },
         {
@@ -30,7 +30,7 @@ const DEFAULT_DATA = {
                 0.4,
                 0.4
             ],
-            "price": 22.1,
+            "price": 22.65,
             "months": "2,5,8,11"
         },
         {
@@ -47,7 +47,7 @@ const DEFAULT_DATA = {
                 1.1,
                 0.78
             ],
-            "price": 50.6,
+            "price": 51.75,
             "months": "3,6,9,12"
         },
         {
@@ -62,7 +62,7 @@ const DEFAULT_DATA = {
                 0.989,
                 3.448
             ],
-            "price": 159.15,
+            "price": 164.2,
             "months": "7,11"
         },
         {
@@ -79,7 +79,7 @@ const DEFAULT_DATA = {
                 0.866,
                 0.866
             ],
-            "price": 37.28,
+            "price": 38.26,
             "months": "1,4,7,10"
         }
     ],
@@ -131,6 +131,19 @@ const DEFAULT_DATA = {
             "shares": 2000,
             "price": 37.29,
             "total": 74589
+        }
+    ],
+    "fundTransactions": [
+        {
+            "id": 1768718753300,
+            "date": "2026-01-15",
+            "name": "0050連結累積",
+            "type": "Buy",
+            "nav": 42.36,
+            "units": 236.1,
+            "amount": 10000,
+            "fee": 0,
+            "total": 10000
         }
     ]
 };
