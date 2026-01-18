@@ -14,7 +14,11 @@ const DEFAULT_DATA = {
                 0.7
             ],
             "price": 72,
-            "months": "1,7"
+            "months": "1,7",
+            "divDates": [
+                22,
+                21
+            ]
         },
         {
             "id": 2,
@@ -31,7 +35,13 @@ const DEFAULT_DATA = {
                 0.4
             ],
             "price": 22.65,
-            "months": "2,5,8,11"
+            "months": "2,5,8,11",
+            "divDates": [
+                20,
+                19,
+                18,
+                18
+            ]
         },
         {
             "id": 3,
@@ -48,7 +58,13 @@ const DEFAULT_DATA = {
                 0.78
             ],
             "price": 51.75,
-            "months": "3,6,9,12"
+            "months": "3,6,9,12",
+            "divDates": [
+                21,
+                20,
+                19,
+                19
+            ]
         },
         {
             "id": 4,
@@ -63,7 +79,11 @@ const DEFAULT_DATA = {
                 3.448
             ],
             "price": 164.2,
-            "months": "7,11"
+            "months": "7,11",
+            "divDates": [
+                16,
+                18
+            ]
         },
         {
             "id": 5,
@@ -80,7 +100,13 @@ const DEFAULT_DATA = {
                 0.866
             ],
             "price": 38.26,
-            "months": "1,4,7,10"
+            "months": "1,4,7,10",
+            "divDates": [
+                22,
+                23,
+                21,
+                23
+            ]
         }
     ],
     "transactions": [
@@ -145,5 +171,7 @@ const DEFAULT_DATA = {
             "fee": 0,
             "total": 10000
         }
-    ]
+    ],
+    "shortTermTargetDate": "2026-01-18",
+    "shortTerm": []
 };

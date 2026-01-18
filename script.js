@@ -3,8 +3,6 @@
 // --- 1. 資料載入機制 ---
 const STORAGE_KEY = 'my_invest_app_v8_twse';
 
-// (保持原有的 getStockColor, loadData, saveData, exportDataFile, resetData 函式不變)
-// ...
 const STOCK_COLORS = {
     '0050': '#2563eb', '0056': '#dc2626', '00878': '#16a34a',
     '00713': '#d97706', '006208': '#9333ea', 'default': '#64748b'
@@ -225,18 +223,104 @@ function renderDashboard() {
 
 function renderDivSettings() {
     const c = document.getElementById('div-settings-container');
+    if (!c) return;
+
     c.innerHTML = appData.portfolio.map((p, pIdx) => {
         let mArr = [];
-        if(p.months && typeof p.months === 'string') mArr = p.months.split(',').map(m => parseInt(m.trim())).filter(n => !isNaN(n));
-        if(!p.divs || p.divs.length !== mArr.length) { const avg = mArr.length > 0 ? Number(p.div) / mArr.length : 0; p.divs = new Array(mArr.length).fill(avg); }
+        // 解析月份字串
+        if (p.months && typeof p.months === 'string') {
+            mArr = p.months.split(',').map(m => parseInt(m.trim())).filter(n => !isNaN(n));
+        }
+
+        // 1. 初始化配息金額陣列 (若長度不符則補齊)
+        if (!p.divs || p.divs.length !== mArr.length) {
+            const avg = mArr.length > 0 ? Number(p.div) / mArr.length : 0;
+            p.divs = new Array(mArr.length).fill(avg);
+        }
+
+        // 2. 【新增】初始化除息日陣列 (若長度不符則預設補 15 號)
+        if (!p.divDates || !Array.isArray(p.divDates) || p.divDates.length !== mArr.length) {
+            p.divDates = new Array(mArr.length).fill(15);
+        }
+
         const inputs = mArr.map((m, dIdx) => {
-            const val = p.divs[dIdx] || 0;
+            const val = p.divs[dIdx] || 0;       // 配息金額
+            const dateVal = p.divDates[dIdx] || 15; // 除息日
+
             const curPay = Math.round(val * p.shares);
-            const estPay = Math.round(val * (p.shares + (p.estShares||0)));
-            return `<div class="flex flex-col border p-2 rounded bg-slate-50 hover:bg-slate-100 transition-colors"><label class="text-xs font-bold text-slate-500 mb-1">${m}月 每股配息</label><input type="number" value="${val}" step="0.01" class="border-blue-300 font-bold text-lg mb-2 text-blue-700" onchange="updateDivDetail(${pIdx}, ${dIdx}, this.value)"><div class="flex justify-between text-xs"><span class="text-blue-600">領:${curPay.toLocaleString()}</span><span class="text-orange-600">預:${estPay.toLocaleString()}</span></div></div>`;
+            const estPay = Math.round(val * (p.shares + (p.estShares || 0)));
+
+            return `
+            <div class="flex flex-col border border-slate-200 p-3 rounded-lg bg-slate-50 hover:bg-white hover:shadow-md transition-all">
+                <!-- 月份標題 -->
+                <div class="flex justify-between items-center mb-2 border-b border-slate-200 pb-1">
+                    <span class="text-sm font-bold text-slate-700">${m}月</span>
+                </div>
+                
+                <!-- 金額輸入 -->
+                <div class="mb-2">
+                    <label class="text-[10px] text-slate-400 block mb-0.5">每股配息($)</label>
+                    <input type="number" value="${val}" step="0.01" 
+                           class="w-full border border-blue-200 rounded px-2 py-1 text-lg font-bold text-blue-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white" 
+                           onchange="updateDivDetail(${pIdx}, ${dIdx}, this.value)">
+                </div>
+
+                <!-- 【新增】日期輸入 -->
+                <div class="mb-3">
+                    <label class="text-[10px] text-slate-400 block mb-0.5">除息日(號)</label>
+                    <div class="relative">
+                        <input type="number" value="${dateVal}" min="1" max="31"
+                               class="w-full border border-gray-300 rounded px-2 py-1 text-sm font-mono text-gray-700 focus:ring-2 focus:ring-gray-500 bg-white pl-6" 
+                               onchange="updateDivDate(${pIdx}, ${dIdx}, this.value)">
+                        <span class="absolute left-2 top-1.5 text-xs text-gray-400">D</span>
+                    </div>
+                </div>
+
+                <!-- 統計資訊 -->
+                <div class="flex justify-between text-xs mt-auto pt-2 border-t border-slate-100">
+                    <span class="text-blue-600 font-medium" title="目前股數可領">領:${fmt(curPay)}</span>
+                    <span class="text-orange-600 font-medium" title="含預估股數">預:${fmt(estPay)}</span>
+                </div>
+            </div>`;
         }).join('');
-        return `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200"><div class="flex justify-between mb-4 border-b pb-2"><h3 class="font-bold text-lg text-slate-800">${p.code} ${p.name}</h3><div class="text-right"><div class="text-sm text-slate-500">年度總計</div><div class="font-bold text-green-600">${Number(p.div).toFixed(3)} / 股</div></div></div><div class="grid grid-cols-2 md:grid-cols-4 gap-4">${inputs}</div></div>`;
+
+        return `
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 mb-6">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <div class="flex items-center gap-3">
+                    <span class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">${p.code}</span>
+                    <h3 class="font-bold text-lg text-slate-800">${p.name}</h3>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs text-slate-500 mb-0.5">年度總配息</div>
+                    <div class="font-bold text-green-600 text-xl">${Number(p.div).toFixed(2)} <span class="text-xs text-gray-400">/股</span></div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                ${inputs}
+            </div>
+        </div>`;
     }).join('');
+}
+
+// 更新除息日 (日)
+function updateDivDate(pIdx, dIdx, val) {
+    // 確保 divDates 陣列存在
+    if (!appData.portfolio[pIdx].divDates) {
+        appData.portfolio[pIdx].divDates = [];
+    }
+    
+    // 更新數值 (限制 1-31)
+    let day = parseInt(val);
+    if (day < 1) day = 1;
+    if (day > 31) day = 31;
+    
+    appData.portfolio[pIdx].divDates[dIdx] = day;
+    
+    saveData();
+    // 這裡我們不一定要 renderAll，但為了確保計算函式(calcIntervalDividends)能抓到最新資料，建議重繪
+    // 如果覺得輸入會跳掉 focus，可以只呼叫 saveData，但在切換頁面時資料要是新的
+    renderAll(); 
 }
 
 function renderPortfolio() {
@@ -374,6 +458,349 @@ function renderTransactions() {
     if (footerTotal) {
         footerTotal.innerText = fmt(sumTotal);
     }
+}
+
+function renderShortTerm() {
+    // 1. 先取得「總覽頁」的統計數據 (用以計算剩餘資金)
+    const s = calcStats(); 
+    const sourceIdleCash = s.rem; 
+
+    // 取得 DOM 元素
+    const tbody = document.getElementById('table-short-body');
+    const sourceDisplay = document.getElementById('short-source-cash');
+    const costDisplay = document.getElementById('short-cost-total');
+    const realRemDisplay = document.getElementById('short-real-remaining');
+    const plDisplay = document.getElementById('short-pl-total');
+    const plPctDisplay = document.getElementById('short-pl-percent');
+
+    // 初始化日期輸入框 (讀取存檔)
+    const dateInput = document.getElementById('short-target-date');
+    if (dateInput) {
+        // 如果沒有存檔日期，預設為今天
+        if (!appData.shortTermTargetDate) {
+            const today = new Date().toISOString().split('T')[0];
+            appData.shortTermTargetDate = today;
+        }
+        dateInput.value = appData.shortTermTargetDate;
+        // 綁定變更事件 (若 HTML 中未綁定)
+        dateInput.onchange = function() { updateTargetDate(this.value); };
+    }
+    
+    const targetDateStr = appData.shortTermTargetDate || new Date().toISOString().split('T')[0];
+
+    // --- 變數初始化 ---
+    let totalShortCost = 0;      // 總成本
+    let totalShortFinal = 0;     // 總損益 (目前含息)
+    
+    if (!appData.shortTerm) appData.shortTerm = [];
+
+    // 2. 渲染表格並計算短期總成本
+    if (tbody) {
+        tbody.innerHTML = appData.shortTerm.map((p, idx) => {
+            const marketVal = Math.round(p.shares * p.price);
+            const totalCost = Math.round(p.shares * p.cost);
+            totalShortCost += totalCost;
+
+            // A. 基礎價差 (Unrealized P&L)
+            const pricePL = marketVal - totalCost;
+
+            // B. 計算「目前」配息 (Buy Date -> Today)
+            // 依賴 calcIntervalDividends 函式 (需包含除息日邏輯)
+            const divDataNow = calcIntervalDividends(p.code, p.date, p.shares); 
+            
+            // 目前含息總益
+            const totalPLNow = pricePL + divDataNow.amount; 
+            const roiNow = totalCost > 0 ? (totalPLNow / totalCost) * 100 : 0;
+            
+            // 累加目前總數據 (用於 Dashboard)
+            totalShortFinal += totalPLNow;
+
+            // C. 計算「預估」配息 (Buy Date -> Target Date)
+            const divDataEst = calcIntervalDividends(p.code, p.date, p.shares, targetDateStr);
+            
+            // 預估含息總益 = (目前價差) + (預估期間總配息)
+            // *假設未來股價不變，僅賺取額外股息
+            const totalPLEst = pricePL + divDataEst.amount;
+            
+            // 計算「額外增加」的股利 (預估 - 目前)
+            // 這代表持有至目標日期，會多領到的股息
+            const extraDiv = divDataEst.amount - divDataNow.amount;
+
+            // --- 樣式邏輯 ---
+            
+            // 目前損益樣式
+            const colorNow = totalPLNow >= 0 ? 'text-red-600' : 'text-green-600';
+            const signNow = totalPLNow > 0 ? '+' : '';
+            const bgNow = totalPLNow >= 0 ? 'bg-red-50' : 'bg-green-50';
+
+            // 預估損益樣式 (藍色系表示未來/預估)
+            const colorEst = totalPLEst >= 0 ? 'text-blue-600' : 'text-green-600';
+            const signEst = totalPLEst > 0 ? '+' : '';
+            
+            // 額外股息提示
+            let extraDivHtml = '';
+            if (extraDiv > 0) {
+                extraDivHtml = `<div class="text-[10px] text-orange-500 font-bold mt-1">
+                                    <i class="fas fa-gift"></i> 待除息 +${fmt(extraDiv)}
+                                </div>`;
+            }
+
+            return `
+            <tr class="border-b hover:bg-orange-50/30 transition-colors group">
+                <!-- 刪除按鈕 -->
+                <td class="p-2 text-center align-middle">
+                    <button onclick="removeShortTerm(${idx})" class="text-gray-300 hover:text-red-500 font-bold px-2 py-1 rounded hover:bg-red-50 transition-colors">×</button>
+                </td>
+                
+                <!-- 1. 代號 -->
+                <td class="p-2 align-middle">
+                    <input type="text" value="${p.code}" 
+                        class="w-20 text-center font-bold text-orange-600 bg-transparent border-b border-dashed border-gray-300 focus:border-orange-500 focus:outline-none"
+                        onchange="updShort(${idx}, 'code', this.value)">
+                </td>
+                
+                <!-- 2. 名稱 -->
+                <td class="p-2 align-middle">
+                    <input type="text" value="${p.name}" 
+                        class="w-24 text-sm bg-transparent border-b border-dashed border-gray-300 focus:border-orange-500 focus:outline-none"
+                        onchange="updShort(${idx}, 'name', this.value)">
+                </td>
+                
+                <!-- 3. 交易日期 -->
+                <td class="p-2 align-middle">
+                    <input type="date" value="${p.date || ''}" 
+                        class="w-full bg-white border border-gray-200 rounded px-2 py-1 text-sm text-gray-600 focus:ring-2 focus:ring-orange-200 focus:border-orange-400 outline-none" 
+                        onchange="updShort(${idx}, 'date', this.value)">
+                </td>
+
+                <!-- 4. 股數 -->
+                <td class="p-2 align-middle">
+                    <input type="number" value="${p.shares}" 
+                        class="w-full text-right bg-white border border-gray-200 rounded px-2 py-1 text-sm font-mono focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none"
+                        onchange="updShort(${idx}, 'shares', this.value)">
+                </td>
+                
+                <!-- 5. 平均成本 -->
+                <td class="p-2 align-middle">
+                    <input type="number" value="${p.cost}" 
+                        class="w-full text-right bg-white border border-gray-200 rounded px-2 py-1 text-sm font-mono focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none"
+                        onchange="updShort(${idx}, 'cost', this.value)">
+                </td>
+                
+                <!-- 6. 現價 -->
+                <td class="p-2 align-middle">
+                    <input type="number" value="${p.price}" 
+                        class="w-full text-right bg-white border border-gray-200 rounded px-2 py-1 text-sm font-mono focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none"
+                        onchange="updShort(${idx}, 'price', this.value)">
+                </td>
+                
+                <!-- 7. 帳面損益 (價差) -->
+                <td class="p-2 text-right font-mono text-sm align-middle">
+                    <span class="${pricePL >= 0 ? 'text-red-600' : 'text-green-600'}">
+                        ${pricePL > 0 ? '+' : ''}${fmt(pricePL)}
+                    </span>
+                    <div class="text-[10px] text-gray-400">價差</div>
+                </td>
+                
+                <!-- 8. 目前含息總益 -->
+                <td class="p-2 text-right font-mono border-l border-orange-100 align-middle ${bgNow} bg-opacity-30">
+                    <div class="${colorNow} font-bold text-base">
+                        ${signNow}${fmt(totalPLNow)}
+                    </div>
+                    <div class="text-[10px] ${colorNow} opacity-80 font-bold">
+                        ${signNow}${roiNow.toFixed(1)}%
+                    </div>
+                    ${divDataNow.amount > 0 ? `<div class="text-[10px] text-gray-400">(含息 ${fmt(divDataNow.amount)})</div>` : ''}
+                </td>
+
+                <!-- 9. 預估含息總益 (至設定日期) -->
+                <td class="p-2 text-right font-mono bg-blue-50/20 border-l border-blue-100 align-middle">
+                    <div class="${colorEst} font-bold text-base">
+                        ${signEst}${fmt(totalPLEst)}
+                    </div>
+                    ${extraDivHtml}
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    // 3. 計算核心數據
+    const realRemaining = sourceIdleCash - totalShortCost;
+    const totalRoi = totalShortCost > 0 ? (totalShortFinal / totalShortCost) * 100 : 0;
+
+    // 4. 更新上方資訊卡 DOM
+    if(sourceDisplay) sourceDisplay.innerText = fmt(sourceIdleCash);
+    if(costDisplay) costDisplay.innerText = fmt(totalShortCost);
+    
+    // 剩餘資金卡片
+    if(realRemDisplay) {
+        realRemDisplay.innerText = fmt(realRemaining);
+        const parentCard = realRemDisplay.parentElement;
+        if (realRemaining < 0) {
+            // 透支：紅色警告
+            realRemDisplay.className = "text-2xl font-bold text-red-600";
+            if(parentCard) parentCard.className = "bg-red-50 p-4 rounded-xl border border-red-200 shadow-sm relative overflow-hidden";
+        } else {
+            // 正常：綠色安全
+            realRemDisplay.className = "text-2xl font-bold text-green-600";
+            if(parentCard) parentCard.className = "bg-emerald-50 p-4 rounded-xl border border-emerald-200 shadow-sm";
+        }
+    }
+
+    // 總損益卡片
+    if(plDisplay) {
+        const sign = totalShortFinal > 0 ? '+' : '';
+        plDisplay.innerText = sign + fmt(totalShortFinal);
+        plDisplay.className = `text-2xl font-bold ${totalShortFinal >= 0 ? 'text-red-600' : 'text-green-600'}`;
+    }
+
+    // 報酬率卡片
+    if(plPctDisplay) {
+        const sign = totalRoi > 0 ? '+' : ''; 
+        plPctDisplay.innerText = `${sign}${totalRoi.toFixed(2)}%`;
+        plPctDisplay.className = `text-lg font-bold ${totalRoi >= 0 ? 'text-red-600' : 'text-green-600'}`;
+    }
+}
+
+// 輔助函式：新增與更新
+function addShortTermItem() {
+    const todayStr = new Date().toISOString().split('T')[0]; // 取得 YYYY-MM-DD
+    appData.shortTerm.push({ 
+        code: '0000', 
+        name: '標的名稱', 
+        date: todayStr, // 預設今天
+        shares: 0, 
+        cost: 0, 
+        price: 0 
+    });
+    saveData();
+    renderShortTerm();
+}
+
+function removeShortTerm(idx) {
+    if(confirm('確定刪除此短期標的？')) {
+        appData.shortTerm.splice(idx, 1);
+        saveData();
+        renderShortTerm();
+    }
+}
+
+// 更新短期策略的單一欄位
+function updShort(idx, field, val) {
+    // 1. 取得該筆資料
+    let item = appData.shortTerm[idx];
+    
+    // 2. 根據欄位類型進行資料轉型
+    if (field === 'shares' || field === 'cost' || field === 'price') {
+        // 數值型欄位：轉為 Number
+        item[field] = Number(val);
+    } else {
+        // 文字或日期型欄位：保持原樣
+        item[field] = val;
+    }
+
+    // 3. 存檔
+    saveData();
+
+    // 4. 重繪短期頁面 (讓總計、損益百分比立即更新)
+    renderShortTerm();
+}
+
+/**
+ * 計算指定區間內獲得的總股利 (修正版)
+ * 1. 依據股利政策設定的「各月金額 (divs)」計算，而非平均分配。
+ * 2. 移除除息日判斷：只要買入月份遇到配息月，一律寬鬆認定為已領息。
+ * @param {string} code - 股票代號
+ * @param {string} buyDateStr - 買入日期 (YYYY-MM-DD)
+ * @param {number} shares - 持有股數
+ * @param {string} endDateStr - (選填) 結算日期，預設為今天。若要算「預估含息」可傳入未來日期。
+ */
+function calcIntervalDividends(code, buyDateStr, shares, endDateStr = null) {
+    // 1. 基礎防呆與資料取得
+    if (!buyDateStr || !shares || shares <= 0) return { count: 0, amount: 0 };
+    
+    // 從長線投資組合中獲取該股票的股利政策 (包含月份、金額、除息日)
+    const policy = appData.portfolio.find(p => p.code === code);
+    if (!policy) return { count: 0, amount: 0 };
+
+    // 2. 解析日期物件
+    const buyDate = new Date(buyDateStr);
+    buyDate.setHours(0, 0, 0, 0); // 歸零時分秒，只比對日期
+
+    const endDate = endDateStr ? new Date(endDateStr) : new Date();
+    endDate.setHours(0, 0, 0, 0);
+
+    // 3. 準備政策數據
+    // 確保 months 是陣列 [3][6][9][12]
+    const pMonths = (typeof policy.months === 'string') 
+                    ? policy.months.split(',').map(m => parseInt(m.trim())) 
+                    : (policy.months || []);
+    
+    const pDivs = policy.divs || [];
+    // 取得除息日設定，若該欄位未設定，預設為每月 15 號
+    const pDates = policy.divDates || []; 
+
+    let totalAmount = 0;
+    let count = 0;
+
+    // 4. 【核心演算法】時間軸遍歷
+    // 建立一個游標，從買入日期的「當月1號」開始檢查
+    let cursor = new Date(buyDate.getFullYear(), buyDate.getMonth(), 1);
+
+    // 只要游標月份還在結束日期之前 (或相同)，就持續檢查
+    // 這裡比較的是月份，實際除息日判定在迴圈內
+    while (cursor <= endDate) {
+        const currYear = cursor.getFullYear();
+        const currMonth = cursor.getMonth() + 1; // getMonth() 是 0-11，需 +1
+
+        // 檢查這個月份是否有配息政策
+        const mIdx = pMonths.indexOf(currMonth);
+
+        if (mIdx !== -1) {
+            // ---------------------------------------------------
+            // A. 決定除息日期
+            // ---------------------------------------------------
+            // 優先使用設定的除息日，若無則預設 15 號
+            let exDay = (pDates[mIdx] && pDates[mIdx] > 0) ? pDates[mIdx] : 15;
+            
+            // 處理日期溢位 (例如 2月30日 -> 3月2日)，雖然輸入端有限制，但防呆比較保險
+            // 簡單處理：若設定超過28號且是2月，可自動修正，或依賴 Date 自動進位
+            const exDate = new Date(currYear, currMonth - 1, exDay);
+
+            // ---------------------------------------------------
+            // B. 判定是否符合領息資格
+            // 規則：買入日期 < 除息日 (T-1日持有) 且 除息日 <= 結算日期 (已發生)
+            // ---------------------------------------------------
+            if (buyDate < exDate && exDate <= endDate) {
+                // 取得該月配息金額 (若無設定個別金額，則用平均值，建議設定個別金額較準)
+                let divPerShare = 0;
+                if (pDivs[mIdx] > 0) {
+                    divPerShare = pDivs[mIdx];
+                } else {
+                    // 若無細項設定，使用年度總配息平均
+                    divPerShare = (policy.div || 0) / pMonths.length;
+                }
+
+                totalAmount += (divPerShare * shares);
+                count++;
+            }
+        }
+
+        // 游標推進到下一個月
+        cursor.setMonth(cursor.getMonth() + 1);
+    }
+
+    return {
+        count: count,
+        amount: Math.round(totalAmount) // 四捨五入取整數
+    };
+}
+
+// 處理日期變更的 Helper
+function updateTargetDate(val) {
+    appData.shortTermTargetDate = val; // 存入全域變數
+    saveData(); // 存檔
+    renderShortTerm(); // 重繪表格
 }
 
 function renderManagement() {
@@ -813,11 +1240,12 @@ function renderAll() {
     renderTransactions(); 
     renderManagement(); 
     renderFundTransactions(); // ★ 新增：渲染基金表
+    renderShortTerm(); // 新增這行
 }
 
 function switchTab(t) {
     document.querySelectorAll('.page-view').forEach(e => e.classList.add('hidden'));
-    document.querySelectorAll('.nav-item').forEach(e => { e.classList.remove('active', 'bg-blue-600', 'text-white', 'bg-teal-600', 'bg-purple-600'); });
+    document.querySelectorAll('.nav-item').forEach(e => { e.classList.remove('active', 'bg-blue-600', 'text-white', 'bg-teal-600', 'bg-purple-600', 'bg-orange-600'); });
     const v = document.getElementById('view-'+t); 
     if(v){ v.classList.remove('hidden'); v.classList.remove('fade-in'); void v.offsetWidth; v.classList.add('fade-in'); }
     
@@ -825,6 +1253,7 @@ function switchTab(t) {
     if(b) {
         if(t === 'twse') b.classList.add('active', 'bg-teal-600', 'text-white');
         else if(t === 'div-settings') b.classList.add('active', 'bg-purple-600', 'text-white');
+        else if(t === 'short') b.classList.add('active', 'bg-orange-600', 'text-white'); // 新增這行
         else b.classList.add('active', 'bg-blue-600', 'text-white');
     }
     
@@ -837,6 +1266,7 @@ function switchTab(t) {
         renderTransactions();
         renderFundTransactions();
     }
+    else if(t==='short') renderShortTerm(); // 新增這行
     else if(t==='management') renderManagement();
 }
 

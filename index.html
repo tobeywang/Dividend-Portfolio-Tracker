@@ -68,6 +68,11 @@
                     <i class="ri-history-line text-xl md:text-lg"></i> 
                     <span>交易記錄</span>
                 </button>
+                <button onclick="switchTab('short')" id="nav-short" 
+                    class="nav-item w-full flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-3 py-2 md:py-2.5 md:px-3 rounded-lg transition-colors font-medium text-xs md:text-sm hover:bg-slate-50">
+                    <i class="ri-rocket-line text-xl md:text-lg"></i> 
+                    <span>短期動態配置</span>
+                </div>
             </div>
 
             <!-- 管理與工具區 -->
@@ -303,6 +308,84 @@
                 </div>
             </div>
         </div>
+
+        <!-- 6.short -->
+        <div id="view-short" class="page-view hidden fade-in">
+            <h2 class="text-2xl font-bold mb-6 text-slate-800 border-l-4 border-orange-500 pl-3">短期波段配置 (衛星資產)</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <!-- 卡片 1: 資金來源 (來自總覽頁) -->
+                <div class="bg-gray-100 p-4 rounded-lg border border-gray-300">
+                    <h3 class="text-gray-500 text-xs font-bold uppercase mb-1">來源：總覽頁閒置資金</h3>
+                    <div class="text-2xl font-bold text-gray-700" id="short-source-cash">0</div>
+                    <div class="text-xs text-gray-400 mt-1">公式：總預算 - 長期P22</div>
+                </div>
+        
+                <!-- 卡片 2: 減去 短期已用 -->
+                <div class="bg-white p-4 rounded-lg border border-orange-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-orange-500 text-white text-xs px-2 py-1 font-bold">減項</div>
+                    <h3 class="text-orange-600 text-xs font-bold uppercase mb-1">短期已投入成本</h3>
+                    <div class="text-2xl font-bold text-orange-600" id="short-cost-total">0</div>
+                </div>
+        
+                <!-- 卡片 3: 等於 最終可下單餘額 -->
+                <div class="bg-white p-4 rounded-lg border-2 border-green-400 shadow-md">
+                    <h3 class="text-green-700 text-xs font-bold uppercase mb-1">短期剩餘可下單金額</h3>
+                    <div class="text-2xl font-bold text-green-600" id="short-real-remaining">0</div>
+                    <div class="text-xs text-green-400 mt-1">此金額大於 0 才可建倉</div>
+                </div>
+        
+                <!-- 卡片 4: 績效監控 (獨立顯示) -->
+                <div class="bg-white p-4 rounded-lg border border-slate-200">
+                    <h3 class="text-slate-500 text-xs font-bold uppercase mb-1">短期帳面損益</h3>
+                    <div class="text-2xl font-bold" id="short-pl-total">0</div>
+                    <div class="text-xs text-gray-400 mt-1" id="short-pl-percent">0%</div>
+                </div>
+            </div>
+            <!-- 1. 功能列區域：加入日期設定 -->
+            <div class="flex items-center gap-2 mb-4 p-2 bg-orange-50 rounded-lg border border-orange-200">
+                <button onclick="addShortTermItem()" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded shadow transition font-bold flex items-center">
+                    <span class="text-xl mr-1">+</span> 新增短期標的
+                </button>
+                
+                <div class="h-8 w-px bg-orange-300 mx-2"></div>
+                
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-bold text-orange-800">預計停利/損日期：</label>
+                    <!-- onchange 事件觸發重整 -->
+                    <input type="date" id="short-target-date" 
+                            class="border border-orange-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-orange-500 bg-white"
+                            onchange="updateTargetDate(this.value)">
+                </div>
+            </div>
+            
+            <!-- 2. 表格標頭：加入新欄位 -->
+            <div class="overflow-x-auto rounded-lg shadow border border-gray-200">
+                <table class="w-full bg-white">
+                    <thead class="bg-gray-50 text-gray-500 font-bold border-b text-sm">
+                        <tr>
+                            <th class="p-2 w-10"></th>
+                            <th class="p-2 text-center">代號</th>
+                            <th class="p-2 text-left">名稱</th>
+                            <th class="p-2 text-left">交易日期</th>
+                            <th class="p-2 text-right">股數</th>
+                            <th class="p-2 text-right">成本</th>
+                            <th class="p-2 text-right">現價</th>
+                            <th class="p-2 text-right">目前帳面損益</th>
+                            <th class="p-2 text-right">目前含息總益</th>
+                            <!-- 新增欄位 -->
+                            <th class="p-2 text-right bg-blue-50 text-blue-800">
+                                預估含息總益<br>
+                                <span class="text-xs font-normal">(至設定日期)</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-short-body"></tbody>
+                </table>
+            </div>
+        </div>
+    
+    
 
         <!-- NEW: TWSE Query (證交所查詢頁面) -->
         <div id="view-twse" class="page-view hidden fade-in">
