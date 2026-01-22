@@ -1,19 +1,19 @@
 const DEFAULT_DATA = {
-    "budget": 2320000,
+    "budget": 2120000,
     "portfolio": [
         {
             "id": 1,
             "code": "0050",
             "name": "元大台灣50",
-            "cost": 272155,
-            "shares": 7000,
-            "estShares": 1000,
+            "cost": 344133,
+            "shares": 8000,
+            "estShares": 0,
             "div": 1.7,
             "divs": [
                 1,
                 0.7
             ],
-            "price": 72,
+            "price": 72.6,
             "months": "1,7",
             "divDates": [
                 22,
@@ -34,7 +34,7 @@ const DEFAULT_DATA = {
                 0.4,
                 0.4
             ],
-            "price": 22.65,
+            "price": 22.84,
             "months": "2,5,8,11",
             "divDates": [
                 20,
@@ -57,7 +57,7 @@ const DEFAULT_DATA = {
                 1.1,
                 0.78
             ],
-            "price": 51.75,
+            "price": 52,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -78,7 +78,7 @@ const DEFAULT_DATA = {
                 0.989,
                 3.448
             ],
-            "price": 164.2,
+            "price": 165.5,
             "months": "7,11",
             "divDates": [
                 16,
@@ -89,9 +89,9 @@ const DEFAULT_DATA = {
             "id": 5,
             "code": "0056",
             "name": "元大高股息",
-            "cost": 148998,
-            "shares": 4000,
-            "estShares": 10000,
+            "cost": 225548,
+            "shares": 6000,
+            "estShares": 8000,
             "div": 3.668,
             "divs": [
                 0.866,
@@ -99,7 +99,7 @@ const DEFAULT_DATA = {
                 0.866,
                 0.866
             ],
-            "price": 38.26,
+            "price": 38.45,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -110,6 +110,22 @@ const DEFAULT_DATA = {
         }
     ],
     "transactions": [
+        {
+            "date": "2026-01-21",
+            "code": "0056",
+            "type": "Buy",
+            "shares": 2000,
+            "price": 38.26,
+            "total": 76520
+        },
+        {
+            "date": "2026-01-21",
+            "code": "0050",
+            "type": "Buy",
+            "shares": 1000,
+            "price": 71.95,
+            "total": 71950
+        },
         {
             "date": "2026-01-05",
             "code": "00713",
@@ -172,6 +188,23 @@ const DEFAULT_DATA = {
             "total": 10000
         }
     ],
-    "shortTermTargetDate": "2026-01-18",
-    "shortTerm": []
+    "shortTermTargetDate": "2026-01-22",
+    "shortTerm": [
+        {
+            "code": "0056",
+            "name": "元大高股息",
+            "date": "2026-01-21",
+            "shares": 1000,
+            "cost": 38.34,
+            "price": 38.2
+        },
+        {
+            "code": "0056",
+            "name": "元大高股息",
+            "date": "2026-01-21",
+            "shares": 5000,
+            "cost": 38.25,
+            "price": 38.2
+        }
+    ]
 };
