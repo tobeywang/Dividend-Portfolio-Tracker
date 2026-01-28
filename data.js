@@ -13,7 +13,7 @@ const DEFAULT_DATA = {
                 1,
                 0.7
             ],
-            "price": 72.6,
+            "price": 73.05,
             "months": "1,7",
             "divDates": [
                 22,
@@ -34,7 +34,7 @@ const DEFAULT_DATA = {
                 0.4,
                 0.4
             ],
-            "price": 22.84,
+            "price": 23.49,
             "months": "2,5,8,11",
             "divDates": [
                 20,
@@ -49,15 +49,15 @@ const DEFAULT_DATA = {
             "name": "元大高息低波",
             "cost": 103317,
             "shares": 2000,
-            "estShares": 1000,
-            "div": 4.06,
+            "estShares": 0,
+            "div": 4.0600000000000005,
             "divs": [
                 1.4,
-                0.78,
                 1.1,
+                0.78,
                 0.78
             ],
-            "price": 52,
+            "price": 52.1,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -78,7 +78,7 @@ const DEFAULT_DATA = {
                 0.989,
                 3.448
             ],
-            "price": 165.5,
+            "price": 169,
             "months": "7,11",
             "divDates": [
                 16,
@@ -91,7 +91,7 @@ const DEFAULT_DATA = {
             "name": "元大高股息",
             "cost": 225548,
             "shares": 6000,
-            "estShares": 8000,
+            "estShares": 7000,
             "div": 3.668,
             "divs": [
                 0.866,
@@ -99,7 +99,7 @@ const DEFAULT_DATA = {
                 0.866,
                 0.866
             ],
-            "price": 38.45,
+            "price": 38.51,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -188,23 +188,39 @@ const DEFAULT_DATA = {
             "total": 10000
         }
     ],
-    "shortTermTargetDate": "2026-01-22",
+    "shortTermTargetDate": "2026-04-30",
     "shortTerm": [
         {
             "code": "0056",
             "name": "元大高股息",
             "date": "2026-01-21",
             "shares": 1000,
-            "cost": 38.34,
-            "price": 38.2
+            "cost": 38.394,
+            "price": 38.51
         },
         {
             "code": "0056",
             "name": "元大高股息",
             "date": "2026-01-21",
             "shares": 5000,
-            "cost": 38.25,
-            "price": 38.2
+            "cost": 38.3044,
+            "price": 38.51
+        },
+        {
+            "code": "0056",
+            "name": "元大高股息",
+            "date": "2026-01-22",
+            "shares": 2000,
+            "cost": 37.91,
+            "price": 38.51
+        },
+        {
+            "code": "00713",
+            "name": "元大台灣高息低波",
+            "date": "2026-01-28",
+            "shares": 1000,
+            "cost": 51.973,
+            "price": 51.9
         }
     ]
 };
