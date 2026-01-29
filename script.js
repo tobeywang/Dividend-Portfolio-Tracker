@@ -181,6 +181,13 @@ function addTransaction() {
     saveData(); renderAll();
     document.getElementById('tx-shares').value = ''; document.getElementById('tx-price').value = '';
 }
+function deleteTransaction(idx) {
+    if(confirm("確定刪除此筆交易紀錄？")) {
+        appData.transactions.splice(idx, 1);
+        saveData();
+        renderAll();
+    }
+}
 function updateDivDetail(pIdx, dIdx, val) {
     appData.portfolio[pIdx].divs[dIdx] = Number(val);
     appData.portfolio[pIdx].div = appData.portfolio[pIdx].divs.reduce((a,b)=>a+b, 0);
@@ -438,7 +445,7 @@ function renderTransactions() {
     let sumTotal = 0; // 用來累加總金額
 
     if(b) {
-        b.innerHTML = appData.transactions.map(t => {
+        b.innerHTML = appData.transactions.map((t, idx) => {
             // 累加金額 (注意：如果是賣出，邏輯上可能是負項，但通常交易記錄顯示成交額皆為正，視您需求)
             // 這裡假設是統計「成交總值」(Volume)，所以都加正數
             sumTotal += Number(t.total);
@@ -450,6 +457,7 @@ function renderTransactions() {
                 <td class="p-4 text-right">${t.shares}</td>
                 <td class="p-4 text-right">${t.price}</td>
                 <td class="p-4 text-right font-bold">${fmt(t.total)}</td>
+                <td class="p-4 text-right"><button onclick="deleteTransaction(${idx})" class="text-red-500 hover:text-red-700 px-2 py-1 text-xs rounded hover:bg-red-50">刪除</button></td>
             </tr>`;
         }).join('');
     }
@@ -457,6 +465,11 @@ function renderTransactions() {
     // 2. 顯示合計金額
     if (footerTotal) {
         footerTotal.innerText = fmt(sumTotal);
+        // Also update the colspan of the footer cell to match the new table structure
+        const footerCell = footerTotal.previousElementSibling;
+        if (footerCell) {
+            footerCell.colSpan = "6";
+        }
     }
 }
 
@@ -1182,7 +1195,8 @@ function clearTwseResults() {
 function syncPricesToPortfolio(data) {
     if (!appData || !appData.portfolio) return;
 
-    let updateCount = 0;
+    let updateCount = 0; // 持股表格更新
+    let updateShortCount = 0 ; // 短期表格更新
     
     // 1. 建立代號與價格的對照表 (Map)，加速比對
     // 考慮到 API 欄位可能不同，使用與 displayTwseResults 相同的邏輯抓取價格
@@ -1212,8 +1226,20 @@ function syncPricesToPortfolio(data) {
         }
     });
 
-    // 3. 如果有更新數據，執行存檔並刷新畫面
-    if (updateCount > 0) {
+    // 3. 遍歷短期波段配置清單，若代號吻合則更新現價
+    if (appData.shortTerm) {
+        appData.shortTerm.forEach(p => {
+            if (priceMap[p.code] !== undefined) {
+                if (p.price !== priceMap[p.code]) {
+                    p.price = priceMap[p.code];
+                    updateShortCount++;
+                }
+            }
+        });
+    }
+
+    // 4. 如果有更新數據，執行存檔並刷新畫面
+    if (updateCount > 0 || updateShortCount > 0) {
         saveData(); // 儲存到 localStorage
         
         // 重新渲染畫面
@@ -1221,12 +1247,14 @@ function syncPricesToPortfolio(data) {
             renderAll(); // 如果有主渲染函式
         } else {
             renderManagement(); // 或是只渲染管理介面
+            renderShortTerm(); // 確保短期波段配置頁面也更新
         }
         
         // 顯示提示訊息 (可選)
         const msgDiv = document.getElementById('twse-message');
         if (msgDiv) {
             msgDiv.innerHTML += `<div class="mt-2 text-green-600 font-bold">★ 已自動更新 ${updateCount} 支持股的現價資訊！</div>`;
+            msgDiv.innerHTML += `<div class="mt-2 text-green-600 font-bold">★ 已自動更新 ${updateShortCount} 支短期配置的現價資訊！</div>`;
         }
     }
 }
@@ -1314,4 +1342,3 @@ window.addEventListener('DOMContentLoaded', () => {
 
     switchTab('dashboard'); 
 });
-
