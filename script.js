@@ -822,10 +822,37 @@ function renderManagement() {
     const b = document.getElementById('table-management-body');
     
     if(b) b.innerHTML = appData.portfolio.map((p, idx) => {
-        // 計算平均成本 (防呆：如果股數為 0，顯示 0)
+        // 1. 計算平均成本
         const avgCost = p.shares > 0 ? (p.cost / p.shares) : 0;
+        
+        // 2. 取得股利與價格資訊
+        const dividend = Number(p.div);
+        const targetPrice = p.targetPrice || 0;
+        const currentPrice = Number(p.price);
 
-        return `<tr class="border-b border-gray-100 hover:bg-gray-50">
+        // 3. 【新增】計算成本殖利率 (YoC)
+        // 公式：年股利 / 平均成本
+        let yoc = 0;
+        if (avgCost > 0) {
+            yoc = (dividend / avgCost) * 100;
+        }
+
+        // 推算合理價 (供目標價參考)
+        const priceYield6 = dividend > 0 ? (dividend / 0.06).toFixed(2) : 0;
+        const priceYield7 = dividend > 0 ? (dividend / 0.07).toFixed(2) : 0;
+
+        // 判定是否觸發買入訊號
+        const isBuyZone = (targetPrice > 0 && currentPrice > 0 && currentPrice <= targetPrice);
+        
+        // 買入訊號 HTML
+        const buySignalHtml = isBuyZone 
+            ? `<span class="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm animate-pulse z-10">BUY</span>` 
+            : '';
+
+        // 現價顏色
+        const priceColorClass = isBuyZone ? 'text-red-600 font-bold' : 'text-slate-700';
+
+        return `<tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
             <!-- 1. 代號 -->
             <td class="p-3 font-bold text-blue-600 align-middle w-20 text-center">${p.code}</td>
             
@@ -853,27 +880,48 @@ function renderManagement() {
                        onchange="upd(${idx},'cost',this.value)">
             </td>
 
-            <!-- 6. NEW: 平均成本 (唯讀，自動計算) -->
+            <!-- 6. 平均成本 -->
             <td class="p-2 w-24 align-middle">
                 <input type="text" value="${avgCost.toFixed(2)}" disabled 
                        class="w-full bg-slate-100 border border-slate-200 rounded px-2 py-1.5 text-right text-slate-600 font-bold text-sm font-mono cursor-default">
             </td>
+
+            <!-- 7. 【新增】成本殖利率 (YoC) -->
+            <!-- 使用唯讀欄位顯示，並加上不同顏色背景強調 -->
+            <td class="p-2 w-24 align-middle bg-indigo-50/30">
+                <div class="flex items-center justify-end px-2 py-1.5 border border-indigo-100 rounded bg-indigo-50">
+                    <span class="text-indigo-700 font-bold font-mono text-sm">${yoc.toFixed(2)}%</span>
+                </div>
+            </td>
+
+            <!-- 8. 目標買入價 -->
+            <td class="p-2 w-28 align-middle bg-yellow-50/50 relative">
+                ${buySignalHtml}
+                <input type="number" value="${targetPrice}" step="0.01" placeholder="未設定"
+                       class="w-full border border-yellow-300 rounded px-2 py-1.5 text-right text-yellow-800 font-bold bg-white focus:ring-2 focus:ring-yellow-500 text-sm font-mono"
+                       onchange="upd(${idx},'targetPrice',this.value)">
+                
+                <div class="flex justify-between mt-1 px-1">
+                    <div class="text-[10px] text-gray-400 cursor-help" title="殖利率 7% 時的股價">7%: ${priceYield7}</div>
+                    <div class="text-[10px] text-gray-400 cursor-help" title="殖利率 6% 時的股價">6%: ${priceYield6}</div>
+                </div>
+            </td>
             
-            <!-- 7. 股利 -->
+            <!-- 9. 現價 -->
+            <td class="p-2 w-24 align-middle">
+                <input type="number" value="${p.price}" 
+                       class="w-full border border-gray-300 rounded px-2 py-1.5 text-right focus:ring-2 focus:ring-blue-500 text-sm font-mono ${priceColorClass}"
+                       onchange="upd(${idx},'price',this.value)">
+            </td>
+            
+            <!-- 10. 股利 -->
             <td class="p-2 w-24 align-middle">
                 <input type="number" value="${Number(p.div).toFixed(2)}" disabled 
                        class="w-full bg-gray-100 border border-gray-200 rounded px-2 py-1.5 text-right text-gray-400 cursor-not-allowed text-sm font-mono"
                        title="請至「股利政策設定」頁面修改細項">
             </td>
             
-            <!-- 8. 現價 -->
-            <td class="p-2 w-24 align-middle">
-                <input type="number" value="${p.price}" 
-                       class="w-full border border-gray-300 rounded px-2 py-1.5 text-right focus:ring-2 focus:ring-blue-500 text-sm font-mono"
-                       onchange="upd(${idx},'price',this.value)">
-            </td>
-            
-            <!-- 9. 配息月份 -->
+            <!-- 11. 配息月份 -->
             <td class="p-2 min-w-[100px] align-middle">
                 <input type="text" value="${p.months}" 
                        class="w-full border border-gray-300 rounded px-2 py-1.5 text-left focus:ring-2 focus:ring-blue-500 text-sm"
@@ -883,6 +931,7 @@ function renderManagement() {
         </tr>`;
     }).join('');
 }
+
 // --- 基金功能區 ---
 
 function addFundTransaction() {

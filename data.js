@@ -8,17 +8,18 @@ const DEFAULT_DATA = {
             "cost": 344133,
             "shares": 8000,
             "estShares": 0,
-            "div": 1.7,
+            "div": 1.3599999999999999,
             "divs": [
                 1,
-                0.7
+                0.36
             ],
             "price": 73.05,
             "months": "1,7",
             "divDates": [
                 22,
                 21
-            ]
+            ],
+            "targetPrice": 0
         },
         {
             "id": 2,
@@ -27,9 +28,9 @@ const DEFAULT_DATA = {
             "cost": 397255,
             "shares": 18000,
             "estShares": 0,
-            "div": 1.77,
+            "div": 1.69,
             "divs": [
-                0.5,
+                0.42,
                 0.47,
                 0.4,
                 0.4
@@ -41,7 +42,8 @@ const DEFAULT_DATA = {
                 19,
                 18,
                 18
-            ]
+            ],
+            "targetPrice": 0
         },
         {
             "id": 3,
@@ -64,7 +66,8 @@ const DEFAULT_DATA = {
                 20,
                 19,
                 19
-            ]
+            ],
+            "targetPrice": 0
         },
         {
             "id": 4,
