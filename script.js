@@ -297,6 +297,7 @@ function renderDivSettings() {
                 <div class="flex items-center gap-3">
                     <span class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">${p.code}</span>
                     <h3 class="font-bold text-lg text-slate-800">${p.name}</h3>
+                    <span class="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">${p.saveBank}</span>
                 </div>
                 <div class="text-right">
                     <div class="text-xs text-slate-500 mb-0.5">年度總配息</div>
@@ -1391,3 +1392,4 @@ window.addEventListener('DOMContentLoaded', () => {
 
     switchTab('dashboard'); 
 });
+
