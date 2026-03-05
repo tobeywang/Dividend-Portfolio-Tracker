@@ -13,12 +13,13 @@ const DEFAULT_DATA = {
                 1,
                 0.36
             ],
-            "price": 73.05,
+            "price": 75.6,
             "months": "1,7",
             "divDates": [
                 22,
                 21
             ],
+			"saveBank":"中信",
             "targetPrice": 0
         },
         {
@@ -35,14 +36,15 @@ const DEFAULT_DATA = {
                 0.4,
                 0.4
             ],
-            "price": 23.49,
+            "price": 22.06,
             "months": "2,5,8,11",
             "divDates": [
-                20,
+                26,
                 19,
                 18,
                 18
             ],
+			"saveBank":"台新",
             "targetPrice": 0
         },
         {
@@ -59,7 +61,7 @@ const DEFAULT_DATA = {
                 0.78,
                 0.78
             ],
-            "price": 52.1,
+            "price": 51.85,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -67,6 +69,7 @@ const DEFAULT_DATA = {
                 19,
                 19
             ],
+			"saveBank":"台灣",
             "targetPrice": 0
         },
         {
@@ -81,12 +84,13 @@ const DEFAULT_DATA = {
                 0.989,
                 3.448
             ],
-            "price": 169,
+            "price": 175.05,
             "months": "7,11",
             "divDates": [
                 16,
                 18
-            ]
+            ],
+			"saveBank":"第一"
         },
         {
             "id": 5,
@@ -94,7 +98,7 @@ const DEFAULT_DATA = {
             "name": "元大高股息",
             "cost": 225548,
             "shares": 6000,
-            "estShares": 7000,
+            "estShares": 5000,
             "div": 3.668,
             "divs": [
                 0.866,
@@ -102,14 +106,39 @@ const DEFAULT_DATA = {
                 0.866,
                 0.866
             ],
-            "price": 38.51,
+            "price": 37.74,
             "months": "1,4,7,10",
             "divDates": [
                 22,
                 23,
                 21,
                 23
-            ]
+            ],
+			"saveBank":"中信"
+        },
+        {
+            "id": 6,
+            "code": "00919",
+            "name": "群益台灣精選",
+            "cost": 72749,
+            "shares": 3000,
+            "estShares": 0,
+            "div": 2.58,
+            "divs": [
+                0.78,
+                0.72,
+                0.54,
+                0.54
+            ],
+            "price": 23.45,
+            "months": "3,6,9,12",
+            "divDates": [
+                18,
+                17,
+                16,
+                16
+            ],
+			"saveBank":"中信"
         }
     ],
     "transactions": [
@@ -176,9 +205,28 @@ const DEFAULT_DATA = {
             "shares": 2000,
             "price": 37.29,
             "total": 74589
+        },
+        {
+            "date": "2026-02-25",
+            "code": "00919",
+            "type": "Buy",
+            "shares": 3000,
+            "price": 24.24,
+            "total": 72749
         }
     ],
     "fundTransactions": [
+        {
+            "id": 1772414487007,
+            "date": "2026-02-23",
+            "name": "0050連結累積",
+            "type": "Buy",
+            "nav": 47.02,
+            "units": 106.3,
+            "amount": 5000,
+            "fee": 0,
+            "total": 5000
+        },
         {
             "id": 1768718753300,
             "date": "2026-01-15",
@@ -199,7 +247,7 @@ const DEFAULT_DATA = {
             "date": "2026-01-21",
             "shares": 1000,
             "cost": 38.394,
-            "price": 38.51
+            "price": 37.74
         },
         {
             "code": "0056",
@@ -207,7 +255,7 @@ const DEFAULT_DATA = {
             "date": "2026-01-21",
             "shares": 5000,
             "cost": 38.3044,
-            "price": 38.51
+            "price": 37.74
         },
         {
             "code": "0056",
@@ -215,7 +263,7 @@ const DEFAULT_DATA = {
             "date": "2026-01-22",
             "shares": 2000,
             "cost": 37.91,
-            "price": 38.51
+            "price": 37.74
         },
         {
             "code": "00713",
@@ -223,7 +271,15 @@ const DEFAULT_DATA = {
             "date": "2026-01-28",
             "shares": 1000,
             "cost": 51.973,
-            "price": 51.9
+            "price": 51.85
+        },
+        {
+            "code": "0056",
+            "name": "元大高股息",
+            "date": "2026-03-04",
+            "shares": 3000,
+            "cost": 37.76,
+            "price": 37.74
         }
     ]
 };
