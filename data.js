@@ -20,7 +20,8 @@ const DEFAULT_DATA = {
                 21
             ],
 			"saveBank":"中信",
-            "targetPrice": 0
+            "targetPrice": 0,
+            "targetYield": 2 
         },
         {
             "id": 2,
@@ -45,7 +46,8 @@ const DEFAULT_DATA = {
                 18
             ],
 			"saveBank":"台新",
-            "targetPrice": 0
+            "targetPrice": 0,
+            "targetYield": 8
         },
         {
             "id": 3,
@@ -70,7 +72,8 @@ const DEFAULT_DATA = {
                 19
             ],
 			"saveBank":"台灣",
-            "targetPrice": 0
+            "targetPrice": 0,
+            "targetYield": 8
         },
         {
             "id": 4,
@@ -90,7 +93,9 @@ const DEFAULT_DATA = {
                 16,
                 18
             ],
-			"saveBank":"第一"
+			"saveBank":"第一",
+            "targetPrice": 0,
+            "targetYield": 6
         },
         {
             "id": 5,
@@ -114,7 +119,9 @@ const DEFAULT_DATA = {
                 21,
                 23
             ],
-			"saveBank":"中信"
+			"saveBank":"中信",
+            "targetPrice": 0,
+            "targetYield": 10
         },
         {
             "id": 6,
@@ -138,7 +145,9 @@ const DEFAULT_DATA = {
                 16,
                 16
             ],
-			"saveBank":"中信"
+			"saveBank":"中信",
+            "targetPrice": 0,
+            "targetYield": 12
         }
     ],
     "transactions": [

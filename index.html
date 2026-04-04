@@ -297,10 +297,21 @@
                         <tbody id="table-fund-body" class="text-sm divide-y divide-gray-100">
                             <!-- JS 自動生成內容 -->
                         </tbody>
-                        <tfoot class="bg-slate-50 font-bold text-slate-700">
+                        <tfoot class="bg-slate-50 font-bold text-slate-700 border-t-2 border-slate-200">
                             <tr>
-                                <td colspan="6" class="p-3 text-right">基金淨投入總計：</td>
-                                <td class="p-3 text-right text-purple-600" id="fund-total-amount">0</td>
+                                <td colspan="5" class="p-3 text-right align-bottom">庫存總計：</td>
+                                <td class="p-3 text-right align-bottom">
+                                    <div class="text-[10px] text-slate-400 font-normal mb-0.5">總單位數</div>
+                                    <div class="text-purple-600" id="fund-total-units">0</div>
+                                </td>
+                                <td class="p-3 text-right align-bottom">
+                                    <div class="text-[10px] text-slate-400 font-normal mb-0.5">平均成本</div>
+                                    <div class="text-orange-600" id="fund-avg-cost">0</div>
+                                </td>
+                                <td class="p-3 text-right align-bottom">
+                                    <div class="text-[10px] text-slate-400 font-normal mb-0.5">淨投入總計</div>
+                                    <div class="text-blue-600" id="fund-total-amount">0</div>
+                                </td>
                                 <td></td>
                             </tr>
                         </tfoot>
@@ -311,7 +322,7 @@
 
         <!-- 6.short -->
         <div id="view-short" class="page-view hidden fade-in">
-            <h2 class="text-2xl font-bold mb-6 text-slate-800 border-l-4 border-orange-500 pl-3">短期波段配置 (衛星資產)</h2>
+            <h2 class="text-2xl font-bold mb-6 text-slate-800 border-l-4 border-orange-500 pl-3">短期波段配置</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <!-- 卡片 1: 資金來源 (來自總覽頁) -->
@@ -382,6 +393,29 @@
                     </thead>
                     <tbody id="table-short-body"></tbody>
                 </table>
+            </div>
+
+             <!-- 3. 短期部位彙總區塊 -->
+            <div class="mt-8 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-4 py-3 border-b border-slate-200">
+                    <h3 class="font-bold text-slate-700"><i class="fas fa-layer-group mr-2"></i>同標的部位彙總</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left whitespace-nowrap">
+                        <thead class="bg-slate-50 text-slate-500 text-xs">
+                            <tr>
+                                <th class="p-3">代號</th>
+                                <th class="p-3">名稱</th>
+                                <th class="p-3 text-right">總股數</th>
+                                <th class="p-3 text-right">平均成本</th>
+                                <th class="p-3 text-right">總成本</th>
+                            </tr>
+                        </thead>
+                        <tbody id="short-summary-body" class="text-sm divide-y divide-slate-100">
+                            <!-- 由 JS 動態渲染 -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     
@@ -483,6 +517,7 @@
                         <th class="p-3 border-b border-gray-200 bg-indigo-50 text-indigo-800">成本殖利率 (YoC)<br>年股利 / 平均成本</th>
                         <!-- 新增與調整順序 -->
                         <th class="p-3 border-b border-gray-200 bg-yellow-50 text-yellow-800">目標買入價<br>預估股利 / 期待殖利率</th>
+                        <th class="p-3 border-b border-gray-200">建議買價</th>
                         <th class="p-3 border-b border-gray-200">現價</th>
                         <th class="p-3 border-b border-gray-200">年股利</th>
                         <th class="p-3 border-b border-gray-200">配息月</th>

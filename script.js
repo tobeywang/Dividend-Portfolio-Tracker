@@ -198,6 +198,7 @@ function upd(idx, f, v) {
     if(f==='months') { appData.portfolio[idx][f] = v; appData.portfolio[idx].divs = []; }
     else appData.portfolio[idx][f] = Number(v);
     saveData();
+    renderAll(); // ★ 新增這行：讓數值改變時立即重繪畫面，觸發買入訊號判斷
 }
 
 // --- 4. 渲染畫面 (保持不變) ---
@@ -486,6 +487,7 @@ function renderShortTerm() {
     const realRemDisplay = document.getElementById('short-real-remaining');
     const plDisplay = document.getElementById('short-pl-total');
     const plPctDisplay = document.getElementById('short-pl-percent');
+    const summaryBody = document.getElementById('short-summary-body'); // ★ 新增：彙總表 DOM
 
     // 初始化日期輸入框 (讀取存檔)
     const dateInput = document.getElementById('short-target-date');
@@ -505,18 +507,31 @@ function renderShortTerm() {
     // --- 變數初始化 ---
     let totalShortCost = 0;      // 總成本
     let totalShortFinal = 0;     // 總損益 (目前含息)
+    let totalPricePL = 0;        // ★ 新增：總帳面損益 (價差)
     
     if (!appData.shortTerm) appData.shortTerm = [];
 
+    // ★ 新增：用來儲存分組統計的物件
+    const summaryMap = {};
+
     // 2. 渲染表格並計算短期總成本
     if (tbody) {
-        tbody.innerHTML = appData.shortTerm.map((p, idx) => {
+        let html = appData.shortTerm.map((p, idx) => {
             const marketVal = Math.round(p.shares * p.price);
             const totalCost = Math.round(p.shares * p.cost);
             totalShortCost += totalCost;
+            
+             // --- ★ 彙總統計邏輯 ---
+            if (!summaryMap[p.code]) {
+                summaryMap[p.code] = { code: p.code, name: p.name, totalShares: 0, totalCost: 0 };
+            }
+            summaryMap[p.code].totalShares += Number(p.shares);
+            summaryMap[p.code].totalCost += totalCost;
+            // ----------------------
 
             // A. 基礎價差 (Unrealized P&L)
             const pricePL = marketVal - totalCost;
+            totalPricePL += pricePL; // ★ 累加總帳面損益
 
             // B. 計算「目前」配息 (Buy Date -> Today)
             // 依賴 calcIntervalDividends 函式 (需包含除息日邏輯)
@@ -636,6 +651,29 @@ function renderShortTerm() {
                 </td>
             </tr>`;
         }).join('');
+
+        // 總計列
+        if (appData.shortTerm.length > 0) {
+            const colorTotalPL = totalShortFinal >= 0 ? 'text-red-600' : 'text-green-600';
+            const signTotalPL = totalShortFinal > 0 ? '+' : '';
+            
+            const colorPricePL = totalPricePL >= 0 ? 'text-red-600' : 'text-green-600';
+            const signPricePL = totalPricePL > 0 ? '+' : '';
+
+            html += `
+            <tr class="bg-orange-100/50 border-t-2 border-orange-200">
+                <td colspan="7" class="p-3 text-right font-bold text-orange-800 align-middle">總計：</td>
+                <td class="p-3 text-right font-mono font-bold text-base align-middle ${colorPricePL}">
+                    ${signPricePL}${fmt(totalPricePL)}
+                </td>
+                <td class="p-3 text-right font-mono font-bold text-lg align-middle ${colorTotalPL}">
+                    ${signTotalPL}${fmt(totalShortFinal)}
+                </td>
+                <td class="p-3"></td>
+            </tr>`;
+        }
+
+        tbody.innerHTML = html;
     }
 
     // 3. 計算核心數據
@@ -673,6 +711,32 @@ function renderShortTerm() {
         const sign = totalRoi > 0 ? '+' : ''; 
         plPctDisplay.innerText = `${sign}${totalRoi.toFixed(2)}%`;
         plPctDisplay.className = `text-lg font-bold ${totalRoi >= 0 ? 'text-red-600' : 'text-green-600'}`;
+    }
+
+    // 5. ★ 渲染彙總表
+    if (summaryBody) {
+        let summaryHtml = '';
+        for (const code in summaryMap) {
+            const s = summaryMap[code];
+            // 計算平均成本
+            const avgCost = s.totalShares > 0 ? (s.totalCost / s.totalShares) : 0;
+            
+            summaryHtml += `
+                <tr class="hover:bg-blue-50 transition-colors">
+                    <td class="p-3 font-bold text-blue-600">${s.code}</td>
+                    <td class="p-3 text-slate-700">${s.name}</td>
+                    <td class="p-3 text-right font-mono text-slate-700">${s.totalShares.toLocaleString()}</td>
+                    <td class="p-3 text-right font-mono text-slate-700">${avgCost.toFixed(2)}</td>
+                    <td class="p-3 text-right font-mono font-bold text-slate-700">${fmt(s.totalCost)}</td>
+                </tr>
+            `;
+        }
+        
+        if (Object.keys(summaryMap).length === 0) {
+            summaryHtml = `<tr><td colspan="5" class="p-4 text-center text-slate-400">尚無部位資料</td></tr>`;
+        }
+        
+        summaryBody.innerHTML = summaryHtml;
     }
 }
 
@@ -828,8 +892,8 @@ function renderManagement() {
         
         // 2. 取得股利與價格資訊
         const dividend = Number(p.div);
-        const targetPrice = p.targetPrice || 0;
         const currentPrice = Number(p.price);
+        const targetPrice = p.targetPrice || currentPrice || 0; 
 
         // 3. 【新增】計算成本殖利率 (YoC)
         // 公式：年股利 / 平均成本
@@ -838,9 +902,20 @@ function renderManagement() {
             yoc = (dividend / avgCost) * 100;
         }
 
-        // 推算合理價 (供目標價參考)
+        // 推算合理價 (供目標價參考) 這裡是用合理股價 = 預估年股利 ÷ 期待殖利率
         const priceYield6 = dividend > 0 ? (dividend / 0.06).toFixed(2) : 0;
         const priceYield7 = dividend > 0 ? (dividend / 0.07).toFixed(2) : 0;
+
+        // 取得自訂的期待殖利率 (若未設定，預設給 6%)
+        const targetYield = p.targetYield || 6; 
+        // 動態計算建議買價：年股利 / (期待殖利率 / 100)
+        const suggestedPrice = dividend > 0 ? (dividend / (targetYield / 100)).toFixed(2) : 0;
+
+        // 計算現價殖利率
+        let currentYield = 0;
+        if (currentPrice > 0) {
+            currentYield = (dividend / currentPrice) * 100;
+        }
 
         // 判定是否觸發買入訊號
         const isBuyZone = (targetPrice > 0 && currentPrice > 0 && currentPrice <= targetPrice);
@@ -901,28 +976,45 @@ function renderManagement() {
                 <input type="number" value="${targetPrice}" step="0.01" placeholder="未設定"
                        class="w-full border border-yellow-300 rounded px-2 py-1.5 text-right text-yellow-800 font-bold bg-white focus:ring-2 focus:ring-yellow-500 text-sm font-mono"
                        onchange="upd(${idx},'targetPrice',this.value)">
-                
-                <div class="flex justify-between mt-1 px-1">
-                    <div class="text-[10px] text-gray-400 cursor-help" title="殖利率 7% 時的股價">7%: ${priceYield7}</div>
-                    <div class="text-[10px] text-gray-400 cursor-help" title="殖利率 6% 時的股價">6%: ${priceYield6}</div>
+            </td>
+
+            <!-- 9. 【獨立新欄位】期待殖利率 & 建議買價 -->
+            <td class="p-2 w-32 align-middle bg-green-50/30 border-l border-green-100">
+                <div class="flex flex-col gap-1">
+                    <div class="flex items-center justify-between text-[10px] text-gray-600 px-1">
+                        <span>殖利率:</span>
+                        <div class="flex items-center">
+                            <input type="number" value="${targetYield}" step="0.1"
+                                   class="w-12 border border-gray-300 rounded px-1 py-0.5 text-right focus:ring-1 focus:ring-green-500 bg-white"
+                                   onchange="upd(${idx},'targetYield',this.value)">
+                            <span class="ml-0.5">%</span>
+                        </div>
+                    </div>
+                    <div class="text-[11px] text-center mt-0.5 pt-1 border-t border-green-200/50">
+                        <span class="text-gray-600 cursor-pointer hover:text-blue-600 hover:font-bold transition-colors underline decoration-dashed"
+                              title="點擊自動填入目標價"
+                              onclick="upd(${idx}, 'targetPrice', ${suggestedPrice})">
+                            建議買價: <span class="font-bold text-green-700">${suggestedPrice}</span>
+                        </span>
+                    </div>
                 </div>
             </td>
             
-            <!-- 9. 現價 -->
+            <!-- 10. 現價 -->
             <td class="p-2 w-24 align-middle">
                 <input type="number" value="${p.price}" 
                        class="w-full border border-gray-300 rounded px-2 py-1.5 text-right focus:ring-2 focus:ring-blue-500 text-sm font-mono ${priceColorClass}"
                        onchange="upd(${idx},'price',this.value)">
             </td>
             
-            <!-- 10. 股利 -->
+            <!-- 11. 股利 -->
             <td class="p-2 w-24 align-middle">
                 <input type="number" value="${Number(p.div).toFixed(2)}" disabled 
                        class="w-full bg-gray-100 border border-gray-200 rounded px-2 py-1.5 text-right text-gray-400 cursor-not-allowed text-sm font-mono"
                        title="請至「股利政策設定」頁面修改細項">
             </td>
             
-            <!-- 11. 配息月份 -->
+            <!-- 12. 配息月份 -->
             <td class="p-2 min-w-[100px] align-middle">
                 <input type="text" value="${p.months}" 
                        class="w-full border border-gray-300 rounded px-2 py-1.5 text-left focus:ring-2 focus:ring-blue-500 text-sm"
@@ -990,17 +1082,29 @@ function addFundTransaction() {
 
 function renderFundTransactions() {
     const tbody = document.getElementById('table-fund-body');
-    const tfoot = document.getElementById('fund-total-amount');
+    const tfootAmount = document.getElementById('fund-total-amount');
+    const tfootUnits = document.getElementById('fund-total-units'); // ★ 新增
+    const tfootAvgCost = document.getElementById('fund-avg-cost');  // ★ 新增
+
     if (!tbody) return;
 
     if (!appData.fundTransactions) appData.fundTransactions = [];
 
     let netFundInvested = 0;
+    let totalUnits = 0; // ★ 新增：累計單位數
 
     const html = appData.fundTransactions.map((t, idx) => {
-        if (t.type === 'Buy') netFundInvested += t.total;
-        if (t.type === 'Sell') netFundInvested -= t.total;
-        if (t.type === 'Div') netFundInvested -= t.total;
+        // ★ 計算淨投入與總單位數
+        if (t.type === 'Buy') {
+            netFundInvested += t.total;
+            totalUnits += Number(t.units || 0);
+        } else if (t.type === 'Sell') {
+            netFundInvested -= t.total;
+            totalUnits -= Number(t.units || 0);
+        } else if (t.type === 'Div') {
+            netFundInvested -= t.total;
+            // 配息通常不影響單位數
+        }
 
         const typeBadge = t.type === 'Buy' 
             ? '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">申購</span>'
@@ -1027,7 +1131,16 @@ function renderFundTransactions() {
     }).join('');
 
     tbody.innerHTML = html;
-    if (tfoot) tfoot.innerText = fmt(netFundInvested);
+    // ★ 計算平均單位成本 (淨投入 / 總單位數)
+    let avgCost = 0;
+    if (totalUnits > 0) {
+        avgCost = netFundInvested / totalUnits;
+    }
+    // ★ 更新底部統計數據
+    if (tfootAmount) tfootAmount.innerText = fmt(netFundInvested);
+    if (tfootUnits) tfootUnits.innerText = totalUnits.toFixed(2); // 單位數通常取小數點後2位
+    if (tfootAvgCost) tfootAvgCost.innerText = avgCost > 0 ? avgCost.toFixed(4) : '0.0000'; // 淨值/成本通常取小數點後4位
+
 }
 
 function deleteFundTx(idx) {
@@ -1268,9 +1381,23 @@ function syncPricesToPortfolio(data) {
     appData.portfolio.forEach(p => {
         // 注意：這裡假設您的 p.code 與 API 回傳的格式一致 (皆為字串)
         if (priceMap[p.code] !== undefined) {
-            // 若價格有變動才更新 (可選)
-            if (p.price !== priceMap[p.code]) {
-                p.price = priceMap[p.code];
+            const newPrice = priceMap[p.code];
+            let isUpdated = false;
+
+            // 1. 若現價有變動則更新
+            if (p.price !== newPrice) {
+                p.price = newPrice;
+                isUpdated = true;
+            }
+
+            // 2. ★ 新增：只有在「未設定」目標買入價 (為 0 或空值) 時，才將其預設為現價
+            if (!p.targetPrice) {
+                p.targetPrice = newPrice;
+                isUpdated = true;
+            }
+
+            // 若有任何欄位被更新，則增加更新計數
+            if (isUpdated) {
                 updateCount++;
             }
         }
