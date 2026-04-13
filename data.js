@@ -5,29 +5,29 @@ const DEFAULT_DATA = {
             "id": 1,
             "code": "0050",
             "name": "元大台灣50",
-            "cost": 344133,
-            "shares": 8000,
+            "cost": 360980,
+            "shares": 8217,
             "estShares": 0,
             "div": 1.3599999999999999,
             "divs": [
                 1,
                 0.36
             ],
-            "price": 75.6,
+            "price": 80.75,
             "months": "1,7",
             "divDates": [
                 22,
                 21
             ],
-			"saveBank":"中信",
-            "targetPrice": 0,
-            "targetYield": 2 
+            "saveBank": "中信",
+            "targetPrice": 68,
+            "targetYield": 2
         },
         {
             "id": 2,
             "code": "00878",
             "name": "國泰永續高股息",
-            "cost": 397255,
+            "cost": 400235,
             "shares": 18000,
             "estShares": 0,
             "div": 1.69,
@@ -37,7 +37,7 @@ const DEFAULT_DATA = {
                 0.4,
                 0.4
             ],
-            "price": 22.06,
+            "price": 23.02,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -45,8 +45,8 @@ const DEFAULT_DATA = {
                 18,
                 18
             ],
-			"saveBank":"台新",
-            "targetPrice": 0,
+            "saveBank": "台新",
+            "targetPrice": 21.13,
             "targetYield": 8
         },
         {
@@ -63,7 +63,7 @@ const DEFAULT_DATA = {
                 0.78,
                 0.78
             ],
-            "price": 51.85,
+            "price": 52.5,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -71,8 +71,8 @@ const DEFAULT_DATA = {
                 19,
                 19
             ],
-			"saveBank":"台灣",
-            "targetPrice": 0,
+            "saveBank": "台灣",
+            "targetPrice": 50.75,
             "targetYield": 8
         },
         {
@@ -87,15 +87,15 @@ const DEFAULT_DATA = {
                 0.989,
                 3.448
             ],
-            "price": 175.05,
+            "price": 187.3,
             "months": "7,11",
             "divDates": [
                 16,
                 18
             ],
-			"saveBank":"第一",
-            "targetPrice": 0,
-            "targetYield": 6
+            "saveBank": "第一",
+            "targetPrice": 147.9,
+            "targetYield": 3
         },
         {
             "id": 5,
@@ -103,15 +103,15 @@ const DEFAULT_DATA = {
             "name": "元大高股息",
             "cost": 225548,
             "shares": 6000,
-            "estShares": 5000,
-            "div": 3.668,
+            "estShares": 0,
+            "div": 3.5980000000000003,
             "divs": [
                 0.866,
-                1.07,
+                1,
                 0.866,
                 0.866
             ],
-            "price": 37.74,
+            "price": 39.41,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -119,17 +119,17 @@ const DEFAULT_DATA = {
                 21,
                 23
             ],
-			"saveBank":"中信",
-            "targetPrice": 0,
+            "saveBank": "中信",
+            "targetPrice": 35.98,
             "targetYield": 10
         },
         {
             "id": 6,
             "code": "00919",
             "name": "群益台灣精選",
-            "cost": 72749,
-            "shares": 3000,
-            "estShares": 0,
+            "cost": 143114,
+            "shares": 6000,
+            "estShares": 6000,
             "div": 2.58,
             "divs": [
                 0.78,
@@ -137,7 +137,7 @@ const DEFAULT_DATA = {
                 0.54,
                 0.54
             ],
-            "price": 23.45,
+            "price": 22.93,
             "months": "3,6,9,12",
             "divDates": [
                 18,
@@ -145,12 +145,28 @@ const DEFAULT_DATA = {
                 16,
                 16
             ],
-			"saveBank":"中信",
-            "targetPrice": 0,
+            "saveBank": "中信",
+            "targetPrice": 21.5,
             "targetYield": 12
         }
     ],
     "transactions": [
+        {
+            "date": "2026-03-05",
+            "code": "00919",
+            "type": "Buy",
+            "shares": 2000,
+            "price": 23.97,
+            "total": 47940
+        },
+        {
+            "date": "2026-03-24",
+            "code": "00919",
+            "type": "Buy",
+            "shares": 1000,
+            "price": 22.4,
+            "total": 22400
+        },
         {
             "date": "2026-01-21",
             "code": "0056",
@@ -226,6 +242,17 @@ const DEFAULT_DATA = {
     ],
     "fundTransactions": [
         {
+            "id": 1774404048408,
+            "date": "2026-03-16",
+            "name": "0050連結累積",
+            "type": "Buy",
+            "nav": 46,
+            "units": 108.7,
+            "amount": 5000,
+            "fee": 0,
+            "total": 5000
+        },
+        {
             "id": 1772414487007,
             "date": "2026-02-23",
             "name": "0050連結累積",
@@ -256,7 +283,7 @@ const DEFAULT_DATA = {
             "date": "2026-01-21",
             "shares": 1000,
             "cost": 38.394,
-            "price": 37.74
+            "price": 39.41
         },
         {
             "code": "0056",
@@ -264,7 +291,7 @@ const DEFAULT_DATA = {
             "date": "2026-01-21",
             "shares": 5000,
             "cost": 38.3044,
-            "price": 37.74
+            "price": 39.41
         },
         {
             "code": "0056",
@@ -272,7 +299,7 @@ const DEFAULT_DATA = {
             "date": "2026-01-22",
             "shares": 2000,
             "cost": 37.91,
-            "price": 37.74
+            "price": 39.41
         },
         {
             "code": "00713",
@@ -280,7 +307,7 @@ const DEFAULT_DATA = {
             "date": "2026-01-28",
             "shares": 1000,
             "cost": 51.973,
-            "price": 51.85
+            "price": 52.5
         },
         {
             "code": "0056",
@@ -288,7 +315,7 @@ const DEFAULT_DATA = {
             "date": "2026-03-04",
             "shares": 3000,
             "cost": 37.76,
-            "price": 37.74
+            "price": 39.41
         }
     ]
 };
