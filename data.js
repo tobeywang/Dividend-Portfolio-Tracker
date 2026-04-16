@@ -13,7 +13,7 @@ const DEFAULT_DATA = {
                 1,
                 0.36
             ],
-            "price": 80.75,
+            "price": 84.15,
             "months": "1,7",
             "divDates": [
                 22,
@@ -37,7 +37,7 @@ const DEFAULT_DATA = {
                 0.4,
                 0.4
             ],
-            "price": 23.02,
+            "price": 23.39,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -63,7 +63,7 @@ const DEFAULT_DATA = {
                 0.78,
                 0.78
             ],
-            "price": 52.5,
+            "price": 53.25,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -87,7 +87,7 @@ const DEFAULT_DATA = {
                 0.989,
                 3.448
             ],
-            "price": 187.3,
+            "price": 195.05,
             "months": "7,11",
             "divDates": [
                 16,
@@ -111,7 +111,7 @@ const DEFAULT_DATA = {
                 0.866,
                 0.866
             ],
-            "price": 39.41,
+            "price": 40.25,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -137,7 +137,7 @@ const DEFAULT_DATA = {
                 0.54,
                 0.54
             ],
-            "price": 22.93,
+            "price": 22.97,
             "months": "3,6,9,12",
             "divDates": [
                 18,
@@ -283,7 +283,7 @@ const DEFAULT_DATA = {
             "date": "2026-01-21",
             "shares": 1000,
             "cost": 38.394,
-            "price": 39.41
+            "price": 40.25
         },
         {
             "code": "0056",
@@ -291,7 +291,7 @@ const DEFAULT_DATA = {
             "date": "2026-01-21",
             "shares": 5000,
             "cost": 38.3044,
-            "price": 39.41
+            "price": 40.25
         },
         {
             "code": "0056",
@@ -299,7 +299,7 @@ const DEFAULT_DATA = {
             "date": "2026-01-22",
             "shares": 2000,
             "cost": 37.91,
-            "price": 39.41
+            "price": 40.25
         },
         {
             "code": "00713",
@@ -307,7 +307,15 @@ const DEFAULT_DATA = {
             "date": "2026-01-28",
             "shares": 1000,
             "cost": 51.973,
-            "price": 52.5
+            "price": 53.25
+        },
+        {
+            "code": "0056",
+            "name": "元大高股息",
+            "date": "2026-02-02",
+            "shares": 2000,
+            "cost": 37.08,
+            "price": 40.25
         },
         {
             "code": "0056",
@@ -315,7 +323,15 @@ const DEFAULT_DATA = {
             "date": "2026-03-04",
             "shares": 3000,
             "cost": 37.76,
-            "price": 39.41
+            "price": 40.25
+        },
+        {
+            "code": "0056",
+            "name": "元大高股息",
+            "date": "2026-03-10",
+            "shares": 2000,
+            "cost": 37.85,
+            "price": 40.25
         }
     ]
 };
