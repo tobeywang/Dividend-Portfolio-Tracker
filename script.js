@@ -488,6 +488,7 @@ function renderShortTerm() {
     const plDisplay = document.getElementById('short-pl-total');
     const plPctDisplay = document.getElementById('short-pl-percent');
     const summaryBody = document.getElementById('short-summary-body'); // ★ 新增：彙總表 DOM
+    const summaryRealized = document.getElementById('short-realized-body'); // ★ 新增：已實現損益表 DOM
 
     // 初始化日期輸入框 (讀取存檔)
     const dateInput = document.getElementById('short-target-date');
@@ -716,6 +717,7 @@ function renderShortTerm() {
     // 5. ★ 渲染彙總表
     if (summaryBody) {
         let summaryHtml = '';
+        let idx = 0 ; 
         for (const code in summaryMap) {
             const s = summaryMap[code];
             // 計算平均成本
@@ -728,8 +730,16 @@ function renderShortTerm() {
                     <td class="p-3 text-right font-mono text-slate-700">${s.totalShares.toLocaleString()}</td>
                     <td class="p-3 text-right font-mono text-slate-700">${avgCost.toFixed(2)}</td>
                     <td class="p-3 text-right font-mono font-bold text-slate-700">${fmt(s.totalCost)}</td>
+                    <td class="p-3 ">
+                    <button
+                        onclick="openShortSellModal('${s.code}')"
+                        class="px-3 py-1 text-xs rounded bg-red-500 hover:bg-red-600 text-white font-bold">
+                        賣出
+                    </button>
+                    </td>
                 </tr>
             `;
+            idx++;
         }
         
         if (Object.keys(summaryMap).length === 0) {
@@ -738,7 +748,164 @@ function renderShortTerm() {
         
         summaryBody.innerHTML = summaryHtml;
     }
+    
+    // 6.
+    if(summaryRealized){
+        const sellList = appData.shortTermSell || [];
+        
+        // 目標 DOM（若不在短期頁/沒放區塊，直接略過）
+        const elPL = document.getElementById('short-realized-pl');
+        const elCost = document.getElementById('short-realized-cost');
+        const elPLP = document.getElementById('short-realized-plp');
+        if (!elPL || !elCost || !elPLP) return;
+        
+        if (!sellList.length) {
+            elPL.textContent = fmt(0);
+            elCost.textContent = fmt(0);
+            elPLP.textContent = '0%';
+            summaryRealized.innerHTML = `<tr><td class="p-3 text-slate-400" colspan="9">尚無已實現賣出紀錄</td></tr>`;
+            return;
+        }
+
+        let totalCost = 0;
+        let totalPL = 0;
+
+        const rows = sellList.map(item => {
+            const shares = Number(item.shares || 0);
+            const costPerShare = Number(item.cost || 0);  // 成本/股
+            const sellTotal = Number(item.price || 0);    // 賣出總額 
+            const costTotal = Math.round(shares * costPerShare);
+            const pl = Math.round(sellTotal - costTotal);
+            const plp = costTotal > 0 ? (pl / costTotal) * 100 : 0;
+            // 累加收到配息
+            const div = shares * Number(item.divdend || 0 ); 
+
+
+            totalCost += costTotal;
+            totalPL += pl + div; // 損益加上配息金額
+
+            const plClass = pl >= 0 ? 'text-red-600' : 'text-green-600';
+
+            return `
+            <tr class="hover:bg-slate-50">
+                <td class="p-3 font-bold text-blue-600">${item.code || ''}</td>
+                <td class="p-3">${item.name || ''}</td>
+                <td class="p-3">${item.date || ''}</td>
+                <td class="p-3 text-right">${shares.toLocaleString()}</td>
+                <td class="p-3 text-right">${costPerShare.toFixed(3)}</td>
+                <td class="p-3 text-right">${fmt(costTotal)}</td>
+                <td class="p-3 text-right">${fmt(sellTotal)}</td>
+                <td class="p-3 text-right font-bold ${plClass}">${fmt(pl)}</td>
+                <td class="p-3 text-right font-bold ${plClass}">${fmt(div)}</td>
+                <td class="p-3 text-right ${plClass}">${plp.toFixed(2)}%</td>
+            </tr>
+            `;
+        }).join('');
+        
+        const totalPLP = totalCost > 0 ? (totalPL / totalCost) * 100 : 0;
+        const totalPLClass = totalPL >= 0 ? 'text-red-700' : 'text-green-700';
+
+        elPL.className = `text-2xl font-bold ${totalPLClass}`;
+        elPL.textContent = fmt(totalPL);
+        elCost.textContent = fmt(totalCost);
+        elPLP.textContent = `${totalPLP.toFixed(2)}%`;
+
+        summaryRealized.innerHTML = rows;
+
+
+    }
 }
+// ==================== 短期策略賣出彈框相關邏輯 ====================
+let currentSellIndex = null;
+
+// 開啟賣出彈框
+function openShortSellModal(code) {
+    // 1) 找出 shortTerm 中「同代號」的候選清單，保留原本 index
+    const candidates = (appData.shortTerm || [])
+        .map((item, idx) => ({ item, idx }))
+        .filter(x => String(x.item.code) === String(code));
+
+    if (!candidates.length) {
+        alert(`找不到短期部位：${code}`);
+        return;
+    }
+
+    // 2) 依日期由舊到新排序，取第一筆
+    //    若 date 空/無效，放到最後（避免 NaN 影響排序）
+    candidates.sort((a, b) => {
+        const ta = Date.parse(a.item.date);
+        const tb = Date.parse(b.item.date);
+        const va = Number.isFinite(ta) ? ta : Number.POSITIVE_INFINITY;
+        const vb = Number.isFinite(tb) ? tb : Number.POSITIVE_INFINITY;
+        return va - vb;
+    });
+
+    const picked = candidates[0];
+    const item = picked.item;
+    currentSellIndex = picked.idx; // ✅ 記住原陣列 index，儲存時 splice 用這個
+
+
+  
+    // 3) 帶入 Modal（代號不可編輯）
+    document.getElementById('sell-code').value = item.code;
+    document.getElementById('sell-name').value = item.name;
+    document.getElementById('sell-shares').value = item.shares;
+    document.getElementById('sell-cost').value = item.cost;
+
+    // 預設賣出日期 = 今天
+    document.getElementById('sell-date').value = new Date().toISOString().split('T')[0];
+
+    document.getElementById('sell-total').value = '';
+    document.getElementById('sell-div').value = 0;
+
+    // 4) 開啟彈框
+    const modal = document.getElementById('short-sell-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+// 關閉彈框（只能取消或儲存）
+function closeShortSellModal() {
+  currentSellIndex = null;
+  document.getElementById('short-sell-modal').classList.add('hidden');
+  document.getElementById('short-sell-modal').classList.remove('flex');
+}
+
+// 確認賣出
+function confirmShortSell() {
+  if (currentSellIndex === null) return;
+
+  const item = appData.shortTerm[currentSellIndex];
+
+  const sellObj = {
+    code: item.code,
+    name: item.name,
+    date: document.getElementById('sell-date').value,
+    shares: item.shares,
+    cost: item.cost,
+    price: Number(document.getElementById('sell-total').value),
+    divdend: Number(document.getElementById('sell-div').value)
+  };
+
+  if (!sellObj.date || !sellObj.price) {
+    alert('請填寫賣出日期與賣出總額');
+    return;
+  }
+
+  // ✅ 寫入 shortTermSell
+  if (!appData.shortTermSell) appData.shortTermSell = [];
+  appData.shortTermSell.unshift(sellObj);
+
+  // ✅ 從 shortTerm 移除 先進先出那筆資料（index 用 currentSellIndex）
+  appData.shortTerm.splice(currentSellIndex, 1);
+
+  saveData();
+  closeShortSellModal();
+
+  // ✅ 立即重算畫面
+  renderShortTerm();
+}
+// ==================== 短期策略相關邏輯 ====================
 
 // 輔助函式：新增與更新
 function addShortTermItem() {
