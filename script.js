@@ -1645,6 +1645,18 @@ function switchTab(t) {
 // --- 7.手機版下拉選單控制邏輯 ---
 
 // 1. 切換選單顯示/隱藏
+// ✅ 主要功能選單（≡）
+function toggleMainMenu() {
+  const mainDD = document.getElementById('mobile-main-dropdown');
+  const adminDD = document.getElementById('mobile-menu-dropdown');
+  if (!mainDD) return;
+
+  // 打開主要功能時，關閉後台選單
+  if (adminDD) adminDD.classList.add('hidden');
+
+  mainDD.classList.toggle('hidden');
+}
+// ✅ 後台選單
 function toggleMobileMenu() {
     const menu = document.getElementById('mobile-menu-dropdown');
     if (menu) {
