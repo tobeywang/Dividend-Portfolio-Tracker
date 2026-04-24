@@ -124,10 +124,45 @@
 
         <!-- 右側下拉選單容器 -->
         <div class="relative">
+            
+            <!-- ✅ 新增：主要功能 漢堡選單 -->
+            <button onclick="toggleMainMenu()" class="p-2 text-slate-500 hover:text-blue-600 transition-colors focus:outline-none" aria-label="主要功能選單">
+                <i class="ri-menu-line text-xl"></i>
+            </button>
+
             <!-- 觸發按鈕 (齒輪 Icon) -->
             <button onclick="toggleMobileMenu()" class="p-2 text-slate-500 hover:text-blue-600 transition-colors focus:outline-none">
                 <i class="ri-settings-4-line text-xl"></i>
             </button>
+            
+            <!-- ✅ 新增：主要功能下拉選單 -->
+            <div id="mobile-main-dropdown"
+                class="hidden absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50">
+                <div class="px-4 py-2 bg-gray-50 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
+                主要功能
+                </div>
+
+                <button onclick="switchTabMobile('dashboard')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-3 border-b border-gray-50 transition-colors">
+                <i class="ri-dashboard-line text-lg text-slate-400"></i> 總覽看板
+                </button>
+
+                <button onclick="switchTabMobile('portfolio')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-3 border-b border-gray-50 transition-colors">
+                <i class="ri-pie-chart-2-line text-lg text-slate-400"></i> 投資組合
+                </button>
+
+                <button onclick="switchTabMobile('analysis')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-3 border-b border-gray-50 transition-colors">
+                <i class="ri-bar-chart-grouped-line text-lg text-slate-400"></i> 配息分析
+                </button>
+
+                <button onclick="switchTabMobile('transactions')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-3 border-b border-gray-50 transition-colors">
+                <i class="ri-history-line text-lg text-slate-400"></i> 交易記錄
+                </button>
+
+                <button onclick="switchTabMobile('short')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 flex items-center gap-3 transition-colors">
+                <i class="ri-rocket-line text-lg text-slate-400"></i> 短期動態配置
+                </button>
+            </div>
+
 
             <!-- 下拉選單內容 (預設隱藏) -->
             <div id="mobile-menu-dropdown" class="hidden absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden transform origin-top-right transition-all">
