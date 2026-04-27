@@ -13,7 +13,7 @@ const DEFAULT_DATA = {
                 1,
                 0.36
             ],
-            "price": 86,
+            "price": 89.95,
             "months": "1,7",
             "divDates": [
                 22,
@@ -37,7 +37,7 @@ const DEFAULT_DATA = {
                 0.4,
                 0.4
             ],
-            "price": 24.72,
+            "price": 25,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -63,7 +63,7 @@ const DEFAULT_DATA = {
                 0.78,
                 0.78
             ],
-            "price": 54,
+            "price": 53.45,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -79,15 +79,15 @@ const DEFAULT_DATA = {
             "id": 4,
             "code": "006208",
             "name": "富邦台50",
-            "cost": 42326,
-            "shares": 400,
+            "cost": 19577,
+            "shares": 200,
             "estShares": 0,
             "div": 4.437,
             "divs": [
                 0.989,
                 3.448
             ],
-            "price": 199.55,
+            "price": 208.95,
             "months": "7,11",
             "divDates": [
                 16,
@@ -101,8 +101,8 @@ const DEFAULT_DATA = {
             "id": 5,
             "code": "0056",
             "name": "元大高股息",
-            "cost": 225548,
-            "shares": 6000,
+            "cost": 307380,
+            "shares": 8000,
             "estShares": 0,
             "div": 3.5980000000000003,
             "divs": [
@@ -111,7 +111,7 @@ const DEFAULT_DATA = {
                 0.866,
                 0.866
             ],
-            "price": 41.97,
+            "price": 40.95,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -129,7 +129,7 @@ const DEFAULT_DATA = {
             "name": "群益台灣精選",
             "cost": 143114,
             "shares": 6000,
-            "estShares": 6000,
+            "estShares": 0,
             "div": 2.58,
             "divs": [
                 0.78,
@@ -137,7 +137,7 @@ const DEFAULT_DATA = {
                 0.54,
                 0.54
             ],
-            "price": 23.64,
+            "price": 23.5,
             "months": "3,6,9,12",
             "divDates": [
                 18,
@@ -151,6 +151,14 @@ const DEFAULT_DATA = {
         }
     ],
     "transactions": [
+        {
+            "date": "2026-04-27",
+            "code": "0056",
+            "type": "Buy",
+            "shares": 2000,
+            "price": 40.9,
+            "total": 81800
+        },
         {
             "date": "2026-03-05",
             "code": "00919",
@@ -242,6 +250,17 @@ const DEFAULT_DATA = {
     ],
     "fundTransactions": [
         {
+            "id": 1776911710755,
+            "date": "2026-04-15",
+            "name": "0050連結累積",
+            "type": "Buy",
+            "nav": 51.44,
+            "units": 97.2,
+            "amount": 5000,
+            "fee": 0,
+            "total": 5000
+        },
+        {
             "id": 1774404048408,
             "date": "2026-03-16",
             "name": "0050連結累積",
@@ -283,7 +302,7 @@ const DEFAULT_DATA = {
             "date": "2026-01-21",
             "shares": 1000,
             "cost": 38.394,
-            "price": 41.97
+            "price": 40.95
         },
         {
             "code": "0056",
@@ -291,7 +310,7 @@ const DEFAULT_DATA = {
             "date": "2026-01-21",
             "shares": 5000,
             "cost": 38.3044,
-            "price": 41.97
+            "price": 40.95
         },
         {
             "code": "0056",
@@ -299,7 +318,7 @@ const DEFAULT_DATA = {
             "date": "2026-01-22",
             "shares": 2000,
             "cost": 37.91,
-            "price": 41.97
+            "price": 40.95
         },
         {
             "code": "0056",
@@ -307,7 +326,7 @@ const DEFAULT_DATA = {
             "date": "2026-02-02",
             "shares": 2000,
             "cost": 37.08,
-            "price": 41.97
+            "price": 40.95
         },
         {
             "code": "0056",
@@ -315,7 +334,7 @@ const DEFAULT_DATA = {
             "date": "2026-03-04",
             "shares": 3000,
             "cost": 37.76,
-            "price": 41.97
+            "price": 40.95
         },
         {
             "code": "0056",
@@ -323,7 +342,7 @@ const DEFAULT_DATA = {
             "date": "2026-03-10",
             "shares": 2000,
             "cost": 37.85,
-            "price": 41.97
+            "price": 40.95
         }
     ],
     "shortTermSell": [
@@ -334,7 +353,7 @@ const DEFAULT_DATA = {
             "shares": 1000,
             "cost": 51.973,
             "price": 53870,
-            "div": 1.4
+            "divdend": 1.4
         }
     ]
 };
