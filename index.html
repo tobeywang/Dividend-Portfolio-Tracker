@@ -6,6 +6,7 @@
     <title>個人資金投資管理系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -203,18 +204,54 @@
             <h2 class="text-2xl font-bold mb-6">資產總覽</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 md:col-span-2">
-                    <div class="flex justify-between items-center mb-4"><h3 class="text-slate-500 font-medium">總計會投入資金 (P22)</h3><div class="text-2xl font-bold text-slate-800" id="dash-p22">0</div></div>
+                    <div class="flex justify-between items-center mb-2"><h3 class="text-slate-500 font-medium">總計會投入資金 (P22)</h3><div class="text-2xl font-bold text-slate-800" id="dash-p22">0</div></div>
                     <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4"><div><div class="text-xs text-slate-400">已買入金額 (P21)</div><div class="text-lg font-bold text-blue-600" id="dash-p21">0</div><div class="text-xs text-slate-400 mt-1">來自交易記錄累計</div></div><div><div class="text-xs text-slate-400">待投入金額 (P20)</div><div class="text-lg font-bold text-orange-500" id="dash-p20">0</div><div class="text-xs text-slate-400 mt-1">預估股數 × 現價</div></div></div>
                 </div>
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-blue-100 bg-blue-50 space-y-4"><div><h3 class="text-blue-600 text-xs font-bold uppercase">總預算</h3><div class="text-xl font-bold text-slate-700" id="dash-budget">0</div></div><div class="border-t border-blue-200 pt-2"><h3 class="text-blue-600 text-xs font-bold uppercase">剩餘閒置資金</h3><div class="text-2xl font-bold text-blue-700" id="dash-remaining">0</div><div class="text-xs text-blue-400 mt-1">公式：總預算 - P22</div></div></div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6"><div class="bg-white p-6 rounded-xl shadow-sm border border-orange-50 bg-orange-50/50 md:col-span-4 lg:col-span-1"><h3 class="text-orange-600 text-sm font-medium mb-2">預估總年股利</h3><div class="text-3xl font-bold text-orange-700" id="dash-dividend-total">0</div><div class="mt-4 space-y-2"><div class="flex justify-between text-sm"><span class="text-slate-500">現有持股:</span><span class="font-bold text-slate-700" id="dash-dividend-cur">0</span></div><div class="flex justify-between text-sm"><span class="text-slate-500">預估:</span><span class="font-bold text-orange-500" id="dash-dividend-add">0</span></div><div class="pt-2 border-t border-orange-200 text-xs text-right text-orange-400" id="dash-yield">--%</div></div></div><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-80 md:col-span-2 lg:col-span-1"><h3 class="font-bold mb-4">資產配置 (已買入)</h3><div class="h-60 relative"><canvas id="chart-pie"></canvas></div></div><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-80 md:col-span-2 lg:col-span-2"><h3 class="font-bold mb-4">每月現金流</h3><div class="h-60 relative"><canvas id="chart-bar"></canvas></div></div></div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6"><div class="bg-white p-6 rounded-xl shadow-sm border border-orange-50 bg-orange-50/50 md:col-span-4 lg:col-span-1"><h3 class="text-orange-600 text-sm font-medium mb-2">預估總年股利</h3><div class="text-3xl font-bold text-orange-700" id="dash-dividend-total">0</div><div class="mt-4 space-y-2"><div class="flex justify-between text-sm"><span class="text-slate-500">現有持股:</span><span class="font-bold text-slate-700" id="dash-dividend-cur">0</span></div><div class="flex justify-between text-sm"><span class="text-slate-500">預估:</span><span class="font-bold text-orange-500" id="dash-dividend-add">0</span></div><div class="pt-2 border-t border-orange-200 text-xs text-right text-orange-400" id="dash-yield">--%</div></div></div><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-80 md:col-span-2 lg:col-span-1"><h3 class="font-bold mb-4">資產配置(YoC)</h3><div class="h-60 relative"><canvas id="chart-pie"></canvas></div></div><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-80 md:col-span-2 lg:col-span-2"><h3 class="font-bold mb-4">每月現金流</h3><div class="h-60 relative"><canvas id="chart-bar"></canvas></div></div></div>
         </div>
 
         <!-- 2. Portfolio -->
         <div id="view-portfolio" class="page-view hidden fade-in">
             <!-- (保持原本內容) -->
-            <h2 class="text-2xl font-bold mb-6">投資組合清單</h2><div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto"><table class="w-full text-left whitespace-nowrap"><thead class="bg-slate-50 text-slate-600 text-sm font-bold border-b border-slate-200"><tr><th class="p-4">代號</th><th class="p-4">名稱</th><th class="p-4 text-right">持有股數</th><th class="p-4 text-right">預估</th><th class="p-4 text-right">總成本</th><th class="p-4 text-right">現價</th><th class="p-4 text-right">市值</th><th class="p-4 text-right">損益</th></tr></thead><tbody id="table-portfolio-body" class="divide-y divide-slate-100 text-sm"></tbody></table></div>
+            <h2 class="text-2xl font-bold mb-6">投資組合清單</h2><div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto"><table class="w-full text-left whitespace-nowrap"><thead class="bg-slate-50 text-slate-600 text-sm font-bold border-b border-slate-200"><tr><th class="p-4">代號</th><th class="p-4">名稱</th><th class="p-4 text-right">持有股數</th><th class="p-4 text-right">預估</th><th class="p-4 text-right">總成本</th><th class="p-4 text-right">現價</th><th class="p-4 text-right">市值</th><th class="p-4 text-right">損益</th><th class="p-4 text-right">YoC</th><th class="p-4 text-right">現價殖利率(CY)</th></tr></thead><tbody id="table-portfolio-body" class="divide-y divide-slate-100 text-sm"></tbody>
+<tfoot class="bg-slate-50 border-t border-slate-200 font-bold text-slate-700">
+<tr>
+  <td colspan="4" class="p-4 text-right">合計：</td>
+
+            <!-- ✅ 總成本 -->
+            <td class="p-4 text-right text-orange-600" id="total-cost">0</td>
+
+            <!-- 空白（現價） -->
+            <td class="p-4"></td>
+
+            <!-- ✅ 總市值 -->
+            <td class="p-4 text-right text-blue-600" id="total-mv">0</td>
+
+            <!-- ✅ 總損益 -->
+            <td class="p-4 text-right" id="total-pf">0</td>
+
+            <!-- YoC 空 -->
+            <td class="p-4"></td>
+
+            <!-- CY 空 -->
+            <td class="p-4"></td>
+            </tr>
+            </tfoot>
+            </table></div>
+        
+            <!-- === 新增區塊：再平衡建議 === -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mt-6">
+                <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center">
+                    <span class="bg-green-100 text-green-600 p-2 rounded-lg mr-3">📊</span>
+                    投資建議 / 再平衡
+                </h2>
+
+                <div id="rebalance-panel-content" class="space-y-4 text-sm">
+                </div>
+            </div>
+
         </div>
 
         <!-- 3. Dividend Settings -->
