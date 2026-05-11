@@ -148,7 +148,50 @@ const DEFAULT_DATA = {
             "saveBank": "中信",
             "targetPrice": 21.5,
             "targetYield": 12
-        }
+        },
+        
+        {
+            "id": 7,
+            "code": "2887",
+            "name": "台新新光金",
+            "cost": 38000,
+            "shares": 2000,
+            "estShares": 0,
+            "div": 1,
+            "divs": [
+                1,
+            ],
+            "price": 23.45,
+            "months": "8",
+            "divDates": [
+                12,
+            ],
+            "saveBank": "台新",
+            "targetPrice": 23.45,
+            "targetYield": 5
+        },
+        
+        {
+            "id": 8,
+            "code": "2882",
+            "name": "國泰金",
+            "cost": 35000,
+            "shares": 1000,
+            "estShares": 0,
+            "div": 3.5,
+            "divs": [
+                3.5,
+            ],
+            "price": 78.4,
+            "months": "6",
+            "divDates": [
+                30
+            ],
+            "saveBank": "國泰",
+            "targetPrice": 68,
+            "targetYield": 5
+        },
+        
     ],
     "transactions": [
         {
