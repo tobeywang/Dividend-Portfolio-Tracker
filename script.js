@@ -244,6 +244,7 @@ function renderDashboard() {
 
             appData.portfolio.forEach(p => {
                 const type = getStockType(p.cost, p.shares, Number(p.div));
+                // const type = getStockType(p.price, p.shares, Number(p.div),targetYield = "current");
 
                 // 內圈加總用 cost
                 grouped[type] = (grouped[type] || 0) + (p.cost || 0);
@@ -545,17 +546,398 @@ function updateDivDate(pIdx, dIdx, val) {
     // 如果覺得輸入會跳掉 focus，可以只呼叫 saveData，但在切換頁面時資料要是新的
     renderAll(); 
 }
-
+// ======================== 投資組告清單 ====================
 function renderPortfolio() {
     const b = document.getElementById('table-portfolio-body');
     if(!b) return;
+    
+    let totalCost = 0;
+    let totalMV = 0;
+
     b.innerHTML = appData.portfolio.map(p => {
         const mv = p.shares * p.price;
         const pf = mv - p.cost;
-        return `<tr class="hover:bg-blue-50"><td class="p-4 font-bold text-blue-600">${p.code}</td><td class="p-4">${p.name}</td><td class="p-4 text-right">${Number(p.shares).toLocaleString()}</td><td class="p-4 text-right text-orange-600">+${Number(p.estShares||0).toLocaleString()}</td><td class="p-4 text-right">${fmt(p.cost)}</td><td class="p-4 text-right">${p.price}</td><td class="p-4 text-right font-bold">${fmt(mv)}</td><td class="p-4 text-right font-bold ${pf>=0?'text-red-500':'text-green-500'}">${fmt(pf)}</td></tr>`;
+        
+        totalCost += p.cost;
+        totalMV += mv;
+        
+        const yoc = getYoC(p.cost, p.shares, p.div);
+        const cy = getCurrentYield(p.div, p.price);
+        const diff = yoc - cy;
+
+        return `<tr class="hover:bg-blue-50"><td class="p-4 font-bold text-blue-600">${p.code}</td><td class="p-4">${p.name}</td><td class="p-4 text-right">${Number(p.shares).toLocaleString()}</td><td class="p-4 text-right text-orange-600">+${Number(p.estShares||0).toLocaleString()}</td><td class="p-4 text-right">${fmt(p.cost)}</td><td class="p-4 text-right">${p.price}</td><td class="p-4 text-right font-bold">${fmt(mv)}</td><td class="p-4 text-right font-bold ${pf>=0?'text-red-500':'text-green-500'}">${fmt(pf)}</td>
+    <!-- ✅ 成本殖利率 -->
+    <td class="p-4 text-right font-bold text-purple-600">
+        ${yoc.toFixed(2)}%
+    </td>
+
+    <!-- ✅ 現價殖利率 -->
+    <td class="p-4 text-right font-bold text-green-600">
+        ${cy.toFixed(2)}%(${diff > 0 ? '+' : ''}${diff.toFixed(2)}%)
+    </td>
+</tr>`;
     }).join('');
+
+    // ✅ 總損益
+    const totalPf = totalMV - totalCost;
+
+    // ✅ 更新 footer
+    document.getElementById('total-cost').innerText = fmt(totalCost);
+    document.getElementById('total-mv').innerText = fmt(totalMV);
+
+    const pfEl = document.getElementById('total-pf');
+    pfEl.innerText = fmt(totalPf);
+    pfEl.className = `p-4 text-right ${totalPf>=0?'text-red-500':'text-green-500'}`;
+
+}
+// ======================== 投資組合再平衡建議 ====================
+// ==============================
+// 目標配置（請自行調整）
+// 重要：key 必須與 getStockType 回傳完全一致：市值型/配息型/其他
+// ==============================
+const TARGET_ALLOCATION = {
+  市值型: 0.3,  // 範例：你提到的 28.7%
+  配息型: 0.7,  // 範例：你提到的 71.3%
+  其他: 0
+};
+
+// ==============================
+// 工具：安全轉數字
+// ==============================
+function n(v, d = 0) {
+  const x = Number(v);
+  return Number.isFinite(x) ? x : d;
 }
 
+// ==============================
+// 工具：市值（用於「資產配置」一致）
+// ==============================
+function getMarketValue(p) {
+  return n(p.shares) * n(p.price);
+}
+
+// ==============================
+// 1) getRebalanceActions()
+//    - 以「市值」計算各分類現況比例（會跟資產配置圖一致）
+//    - 以「市值」計算各分類目標市值與差距
+//    - 同時產生每檔股票的 base 資料（含所屬類別、市值、價格等）
+// ==============================
+function getRebalanceActions() {
+  const portfolio = Array.isArray(appData?.portfolio) ? appData.portfolio : [];
+
+  const stockBase = portfolio.map(p => {
+    const cost = n(p.cost);
+    const shares = n(p.shares);
+    const dividend = n(p.div);
+    const type = getStockType(cost, shares, dividend); 
+    const mv = getMarketValue(p);
+    return {
+      code: p.code,
+      name: p.name,
+      type,
+      price: n(p.price),
+      mv,
+      shares
+    };
+  });
+  const totalMV = stockBase.reduce((sum, s) => sum + s.mv, 0);
+
+  // 分類現況市值
+  const typeMV = { 市值型: 0, 配息型: 0, 其他: 0 };
+  stockBase.forEach(s => {
+    if (typeMV[s.type] === undefined) typeMV[s.type] = 0;
+    typeMV[s.type] += s.mv;
+  });
+
+  // 目標比例正規化（避免你填的比例加總不是 1）
+  const keys = Object.keys(TARGET_ALLOCATION);
+  const ratioSum = keys.reduce((a, k) => a + n(TARGET_ALLOCATION[k]), 0) || 1;
+  const normTarget = {};
+  keys.forEach(k => normTarget[k] = n(TARGET_ALLOCATION[k]) / ratioSum);
+
+  // 分類目標市值與差距（以市值計）
+  const typeSummary = {};
+  Object.keys(typeMV).forEach(type => {
+    const curMV = typeMV[type] || 0;
+    const curPct = totalMV > 0 ? curMV / totalMV : 0;
+
+    const tgtPct = normTarget[type] || 0;
+    const tgtMV = totalMV * tgtPct;
+    const gapMV = tgtMV - curMV; // >0 代表該類別應加碼
+
+    typeSummary[type] = {
+      curMV,
+      curPct,
+      tgtPct,
+      tgtMV,
+      gapMV
+    };
+  });
+
+  return {
+    stockBase,
+    totalMV,
+    typeSummary,
+    normTarget
+  };
+}
+
+// ==============================
+// 2) getBudgetRebalance(base, budget)
+//    - 只做「加碼」：找出類別 gapMV>0 的類別
+//    - 把這些類別的 gapMV 當成需求，依比例分配預算到各類別
+//    - 類別內分配：用「原本該類別中各股票市值占比」維持類內權重
+//    - 換成可買股數（floor），並用剩餘預算做「補零碎」
+//    - 回傳 actions（每檔建議買幾股、金額） + 匯總
+// ==============================
+function getBudgetRebalance(base, budget) {
+  const B = Math.max(0, n(budget));
+
+  const { stockBase, typeSummary } = base;
+  const totalMV = base.totalMV;
+
+  // 找出需要加碼的類別（gapMV>0）
+  const positiveTypes = Object.keys(typeSummary)
+    .filter(t => (typeSummary[t]?.gapMV || 0) > 0);
+
+  if (positiveTypes.length === 0 || B <= 0 || totalMV <= 0) {
+    return {
+      actions: [],
+      invested: 0,
+      remaining: B,
+      typeBuy: { 市值型: 0, 配息型: 0, 其他: 0 }
+    };
+  }
+
+  // 加碼需求總量（以市值差距計）
+  const totalNeed = positiveTypes.reduce((sum, t) => sum + typeSummary[t].gapMV, 0);
+
+  // 先算每檔股票「理論應補市值」（由類別 gapMV 分配到類內）
+  // 類內權重：以該類別內各股票目前市值占比（維持類內比例）
+  const typeStocks = {};
+  positiveTypes.forEach(t => {
+    typeStocks[t] = stockBase.filter(s => s.type === t && s.price > 0);
+  });
+
+  // 每檔理論缺口（僅針對要加碼類別）
+  const candidates = [];
+  positiveTypes.forEach(t => {
+    const list = typeStocks[t];
+    if (!list.length) return;
+
+    const typeCurMV = typeSummary[t].curMV || 0;
+    const typeGap = typeSummary[t].gapMV || 0;
+
+    list.forEach(s => {
+      const w = typeCurMV > 0 ? (s.mv / typeCurMV) : (1 / list.length);
+      const stockNeedMV = typeGap * w; // 該檔股票「理論應補」的市值
+      if (stockNeedMV > 0) {
+        candidates.push({
+          code: s.code,
+          type: s.type,
+          price: s.price,
+          needMV: stockNeedMV
+        });
+      }
+    });
+  });
+
+  const totalStockNeed = candidates.reduce((a, c) => a + c.needMV, 0);
+  if (totalStockNeed <= 0) {
+    return {
+      actions: [],
+      invested: 0,
+      remaining: B,
+      typeBuy: { 市值型: 0, 配息型: 0, 其他: 0 }
+    };
+  }
+
+  // 第一輪：按 needMV 比例分配預算並換算股數
+  let actions = candidates.map(c => {
+    const alloc = B * (c.needMV / totalStockNeed);
+    const shares = Math.floor(alloc / c.price);
+    const amount = shares * c.price;
+    return { ...c, alloc, shares, amount };
+  });
+
+  // 算投入/剩餘
+  let invested = actions.reduce((s, a) => s + a.amount, 0);
+  let remaining = B - invested;
+
+  // 補零碎：用剩餘預算買 1 股 1 股補到「剩餘 need」最大且買得起的
+  let guard = 0;
+  const MAX_LOOP = 2000;
+
+  while (remaining > 0 && guard < MAX_LOOP) {
+    guard++;
+
+    // 還有剩餘需求且買得起 1 股
+    const affordable = actions.filter(a => {
+      const remainNeed = a.needMV - a.amount;
+      return remainNeed >= a.price && a.price <= remaining;
+    });
+
+    if (!affordable.length) break;
+
+    affordable.sort((a, b) => (b.needMV - b.amount) - (a.needMV - a.amount));
+
+    const pick = affordable[0];
+    pick.shares += 1;
+    pick.amount += pick.price;
+    remaining -= pick.price;
+  }
+
+  invested = actions.reduce((s, a) => s + a.amount, 0);
+  remaining = B - invested;
+
+  // 清掉 shares=0，排序（投入金額大者優先）
+  actions = actions.filter(a => a.shares > 0).sort((a, b) => b.amount - a.amount);
+
+  // 類別買入金額匯總（你要的「股數×現值」）
+  const typeBuy = { 市值型: 0, 配息型: 0, 其他: 0 };
+  actions.forEach(a => {
+    if (typeBuy[a.type] === undefined) typeBuy[a.type] = 0;
+    typeBuy[a.type] += a.amount;
+  });
+
+  return { actions, invested, remaining, typeBuy };
+}
+
+// ==============================
+// 3) renderRebalancePanel()
+//    - 建立 UI（預算輸入 + 總覽 + 分類建議 + 個股建議）
+//    - input 改變即重算
+//    - 分類比例用「市值」顯示，會跟資產配置一致
+//    - 分類「建議投入」用 typeBuy（股數×現價）顯示
+// ==============================
+function renderRebalancePanel() {
+  const host = document.getElementById('rebalance-panel-content');
+  if (!host) return;
+
+  // 若 UI 尚未建立，先建立一次
+  if (!document.getElementById('rebalance-budget')) {
+    host.innerHTML = `
+      <div class="bg-slate-50 p-4 rounded-xl mb-4 border border-slate-200">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+          <div>
+            <div class="text-xs text-slate-400 mb-1">可投入預算（元）</div>
+            <input type="number" id="rebalance-budget" value="10000" min="0"
+              class="w-full bg-white border border-slate-300 rounded px-3 py-2 text-sm">
+            <div class="text-[11px] text-slate-400 mt-1">輸入變更即時計算</div>
+          </div>
+          <div class="bg-white rounded-lg p-3 border border-slate-200">
+            <div class="text-xs text-slate-400">建議投入</div>
+            <div id="rebalance-total-invest" class="text-2xl font-bold text-blue-600">0</div>
+          </div>
+          <div class="bg-white rounded-lg p-3 border border-slate-200">
+            <div class="text-xs text-slate-400">剩餘預算</div>
+            <div id="rebalance-remaining" class="text-2xl font-bold text-slate-700">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+          <div class="font-bold text-slate-800 mb-3">資產配置建議（依市值殖利率基準）</div>
+          <div id="rebalance-type" class="space-y-2 text-sm"></div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+          <div class="font-bold text-slate-800 mb-3">建議買入清單（受預算限制）</div>
+          <div id="rebalance-stocks" class="space-y-2 text-sm"></div>
+        </div>
+      </div>
+    `;
+
+    // 監聽 input：值一改變就算
+    document.getElementById('rebalance-budget').addEventListener('input', () => {
+      renderRebalancePanel();
+    });
+  }
+
+  const budget = n(document.getElementById('rebalance-budget')?.value, 0);
+
+  const totalInvestEl = document.getElementById('rebalance-total-invest');
+  const remainingEl = document.getElementById('rebalance-remaining');
+  const typeEl = document.getElementById('rebalance-type');
+  const stocksEl = document.getElementById('rebalance-stocks');
+
+  // === 核心：呼叫你想善用的兩個 function ===
+  const base = getRebalanceActions();                      // 理論（用市值）
+  const res = getBudgetRebalance(base, budget);            // 預算限制（可執行）
+
+  // 上方總覽
+  if (totalInvestEl) totalInvestEl.textContent = fmt(res.invested);
+  if (remainingEl) remainingEl.textContent = fmt(res.remaining);
+
+  // 分類建議：顯示 目前% / 目標% / 距離% + 建議投入（股數×現值）
+  const order = ['市值型', '配息型', '其他'];
+  if (typeEl) {
+    typeEl.innerHTML = order.map(type => {
+      const s = base.typeSummary[type] || { curPct: 0, tgtPct: 0 };
+      const curPct = (s.curPct * 100).toFixed(1);
+      const tgtPct = (s.tgtPct * 100).toFixed(1);
+      const dist = ((s.tgtPct - s.curPct) * 100);
+      const distTxt = `${dist >= 0 ? '+' : ''}${dist.toFixed(1)}%`;
+
+      const buyAmt = n(res.typeBuy[type], 0);
+
+      let badge = '持有';
+      let badgeCls = 'bg-slate-100 text-slate-600';
+      if (buyAmt > 0) { badge = '加碼'; badgeCls = 'bg-blue-100 text-blue-700'; }
+      else if (dist < -3) { badge = '偏高'; badgeCls = 'bg-red-100 text-red-700'; }
+
+      return `
+        <div class="bg-slate-50 px-3 py-2 rounded border border-slate-200">
+          <div class="flex justify-between items-center">
+            <div class="font-bold text-slate-700 flex items-center gap-2">
+              ${type}
+              <span class="${badgeCls} text-[11px] px-2 py-0.5 rounded">${badge}</span>
+            </div>
+            <div class="text-xs text-slate-500">
+              目前 ${curPct}% / 目標 ${tgtPct}%
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 mt-2 text-xs">
+            <div class="flex justify-between">
+              <span class="text-slate-400">距離目標</span>
+              <span class="${dist >= 0 ? 'text-blue-600' : 'text-red-500'} font-bold">${distTxt}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">建議投入</span>
+              <span class="${buyAmt > 0 ? 'text-blue-600' : 'text-slate-600'} font-bold">${fmt(buyAmt)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 個股建議：列出 Top 5（代號、股數、金額）
+  if (stocksEl) {
+    if (!res.actions.length) {
+      stocksEl.innerHTML = (budget <= 0)
+        ? `<div class="text-slate-400 text-xs">預算為 0，無法產生買入建議</div>`
+        : `<div class="text-slate-400 text-xs">目前配置已接近目標，無需加碼</div>`;
+    } else {
+      stocksEl.innerHTML = res.actions.slice(0, 5).map((a, i) => `
+        <div class="flex justify-between bg-blue-50 px-3 py-2 rounded-lg border border-blue-100">
+          <div class="flex flex-col">
+            <span class="font-bold text-slate-800">${i + 1}. ${a.code}</span>
+            <span class="text-[11px] text-slate-500">${a.type}｜單價 ${a.price}</span>
+          </div>
+          <div class="text-right">
+            <div class="text-blue-700 font-bold">+${a.shares} 股</div>
+            <div class="text-[11px] text-slate-600">${fmt(a.amount)}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+}
+
+// ======================== 投資組合再平衡建議 ====================
 function renderAnalysis() {
     const s = calcStats();
     if(typeof Chart !== 'undefined'){
@@ -1261,7 +1643,8 @@ function updateTargetDate(val) {
     renderShortTerm(); // 重繪表格
 }
 
-//計算成本殖利率 (YoC) 總成本,張數,每股股利
+// 計算成本殖利率 (YoC) 總成本,張數,每股股利\
+// 殖利率 = 年股利 ÷ 買入成本
 function getYoC(cost, shares, dividend){
     if(!cost || !shares) return 0;
 
@@ -1269,13 +1652,27 @@ function getYoC(cost, shares, dividend){
     return (totalDividend / cost) * 100;
 }
 
-//判斷股票是什麼類型：如殖利率 > 6% 就是配息型，> 0%就是市值型，暫沒有其他投資(如債券)
-function getStockType(cost,shares, dividend){
-    const yoc = getYoC(cost, shares, dividend);
+// 現價殖利率（Current Yield）
+//殖利率 = 年股利 ÷ 當前股價
+function getCurrentYield(dividend, currentPrice){
+    if(!currentPrice) return 0;
+    return (dividend / currentPrice) * 100;
+}
+
+//判斷股票是什麼類型：如成本殖利率 > 6% 就是配息型，> 0%就是市值型，暫沒有其他投資(如債券)
+// targetYield 預設值 "yoc" 代表以成本殖利率作為判斷依據，反之用現價殖利率作為判斷依據
+function getStockType(myPrice,shares, dividend,targetYield = "yoc"){
+    let value = 0;
+    if(targetYield === "yoc"){
+        value = getYoC(myPrice, shares, dividend);
+    }
+    else if(targetYield === "current"){
+        value = getCurrentYield(dividend, myPrice); // 以平均成本作為價格基準
+    }
     const typeOrder = ['市值型', '配息型', '其他'];
-    if (yoc >= 6) {
+    if (value >= 6) {
         return '配息型';
-    } else if (yoc > 0) {
+    } else if (value > 0) {
         return '市值型';
     }   else {      
         return '其他';
@@ -1312,7 +1709,7 @@ function renderManagement() {
         // 計算現價殖利率
         let currentYield = 0;
         if (currentPrice > 0) {
-            currentYield = (dividend / currentPrice) * 100;
+            currentYield = getCurrentYield(dividend / currentPrice);
         }
 
         // 判定是否觸發買入訊號
@@ -1838,6 +2235,7 @@ function syncPricesToPortfolio(data) {
 function renderAll() { 
     renderDashboard(); 
     renderPortfolio(); 
+    renderRebalancePanel(); // 新增再平衡面板渲染
     renderDivSettings(); 
     renderAnalysis(); 
     renderTransactions(); 
@@ -1861,7 +2259,10 @@ function switchTab(t) {
     }
     
     if(t==='dashboard') renderDashboard(); 
-    else if(t==='portfolio') renderPortfolio();
+    else if(t==='portfolio') {
+        renderPortfolio();
+        renderRebalancePanel();
+    }
     else if(t==='div-settings') renderDivSettings();
     else if(t==='analysis') renderAnalysis(); 
     else if(t==='transactions') 
