@@ -194,6 +194,7 @@ function updateDivDetail(pIdx, dIdx, val) {
     saveData(); renderAll();
 }
 function updateBudget(v) { appData.budget = Number(v); saveData(); renderAll(); }
+
 function upd(idx, f, v) { 
     if(f==='months') { appData.portfolio[idx][f] = v; appData.portfolio[idx].divs = []; }
     else appData.portfolio[idx][f] = Number(v);
@@ -216,16 +217,229 @@ function renderDashboard() {
 
     if(typeof Chart !== 'undefined'){
         const ctxP = document.getElementById('chart-pie');
+        
+        if (typeof ChartDataLabels !== 'undefined') {
+            Chart.register(ChartDataLabels);
+        }
+
         if(ctxP){
             if(charts.pie) charts.pie.destroy();
-            charts.pie = new Chart(ctxP, { type: 'pie', data: { labels: appData.portfolio.map(p=>p.name), datasets: [{ data: appData.portfolio.map(p=>p.cost), backgroundColor: appData.portfolio.map(p=>getStockColor(p.code)) }] }, options: { maintainAspectRatio: false } });
+
+            // ===== 內圈：分類（市值型/配息型/其他）=====
+            const TYPE_ORDER = ['市值型', '配息型', '其他'];
+            const typeColorMap = {
+                '市值型': '#3B82F6', // 藍
+                '配息型': '#F59E0B', // 橘
+                '其他'  : '#10B981'  // 綠
+            };
+
+            // 分組累計（內圈）
+            const grouped = { 市值型: 0, 配息型: 0, 其他: 0 };
+
+            // ===== 外圈：個股 =====
+            const outerLabels = [];
+            const outerData = [];
+            const outerColors = [];
+            const outerTypes = []; // 每個個股對應的分類（tooltip 用）
+
+            appData.portfolio.forEach(p => {
+                const type = getStockType(p.cost, p.shares, Number(p.div));
+
+                // 內圈加總用 cost
+                grouped[type] = (grouped[type] || 0) + (p.cost || 0);
+
+                // 外圈：每檔股票
+                outerLabels.push(p.name);
+                outerData.push(p.cost || 0);
+                outerColors.push(getStockColor(p.code)); // 你原本的個股顏色規則
+                outerTypes.push(type);
+            });
+
+            // 整體總額（算 %）
+            const total = outerData.reduce((a,b)=>a+b, 0);
+
+            // 內圈資料（把 0 的類別濾掉，避免出現 0% 扇形）
+            const innerLabels = TYPE_ORDER.filter(t => (grouped[t] || 0) > 0);
+            const innerData   = innerLabels.map(t => grouped[t]);
+            const innerColors = innerLabels.map(t => typeColorMap[t]);
+
+            charts.pie = new Chart(ctxP, {
+                // ✅ 多 datasets 的 doughnut 就是多圈（雙層圓環）
+                type: 'doughnut',
+                data: {
+                    // labels 先放外圈的（Chart.js 的 labels 是共用的，我們用 tooltip callback 自己切換顯示）
+                    labels: outerLabels,
+                    datasets: [
+                        // 內圈：分類
+                        {
+                            label: '分類',
+                            data: innerData,
+                            backgroundColor: innerColors,
+                            borderColor: '#fff',
+                            borderWidth: 2,
+                            hoverOffset: 6,
+                            // 用 weight 控制圈厚度（多 dataset 時會依 weight 分配厚度）【2-134392】
+                            weight: 0.8,
+                            // 自訂存 labels，讓 tooltip 能拿到正確分類名稱
+                            _labels: innerLabels
+                        },
+                        // 外圈：個股
+                        {
+                            label: '個股',
+                            data: outerData,
+                            backgroundColor: outerColors,
+                            borderColor: '#fff',
+                            borderWidth: 2,
+                            hoverOffset: 6,
+                            weight: 1.2,
+                            _types: outerTypes // tooltip 顯示「這檔屬於哪個分類」
+                        }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    cutout: '45%',
+
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                generateLabels: (chart) => {
+                                    const dsInner = chart.data.datasets[0]; // 分類
+                                    const dsOuter = chart.data.datasets[1]; // 個股
+
+                                    const total = dsOuter.data.reduce((a,b)=>a+b, 0);
+
+                                    return (dsInner._labels || [])
+                                        .map((label, i) => {
+                                        const value = dsInner.data[i] || 0;
+                                        if(value <= 0) return null;
+
+                                        const pct = total > 0
+                                            ? (value / total * 100).toFixed(1)
+                                            : '0.0';
+
+                                        return {
+                                            text: `${label} ${pct}%`,
+                                            fillStyle: dsInner.backgroundColor[i],
+                                            strokeStyle: dsInner.backgroundColor[i],
+                                            lineWidth: 0,
+                                            hidden: false,
+                                            index: i
+                                        };
+                                        })
+                                        .filter(x => x); // 移除 null
+                                }
+                            },
+                            onClick: () => {}
+                        },
+
+                        tooltip: {
+                        callbacks: {
+                            title: function(items) {
+                            const ctx = items[0];
+                            const ds = ctx.chart.data.datasets[ctx.datasetIndex];
+
+                            if(ctx.datasetIndex === 0){
+                                return (ds._labels && ds._labels[ctx.dataIndex]) || '分類';
+                            }
+                            return ctx.chart.data.labels[ctx.dataIndex] || '個股';
+                            },
+                            label: function(context) {
+                            const ds = context.chart.data.datasets[context.datasetIndex];
+                            const value = context.raw || 0;
+                            const total = context.chart.data.datasets[1].data
+                                .reduce((a,b)=>a+b, 0);
+
+                            const pct = total > 0 ? (value / total * 100).toFixed(1) : '0.0';
+
+                            if(context.datasetIndex === 0){
+                                return `金額: ${fmt(value)}（${pct}%）`;
+                            }
+
+                            const type = ds._types?.[context.dataIndex] || '';
+                            return `金額: ${fmt(value)}（${pct}%）${type ? '｜' + type : ''}`;
+                            }
+                        }
+                        },
+
+                        // ✅ ✅ 關鍵：只顯示 外圈前三大 + 股票名稱 + %
+                        datalabels: {
+                        display: (context) => {
+                            // ✅ 只限制外圈
+                            if (context.datasetIndex !== 1) return false;
+
+                            const data = context.dataset.data;
+
+                            // ✅ 排序找前三大 index
+                            const top3 = data
+                            .map((v, i) => ({ v, i }))
+                            .filter(x => x.v > 0)
+                            .sort((a, b) => b.v - a.v)
+                            .slice(0, 3)
+                            .map(x => x.i);
+
+                            // ✅ 判斷現在這一筆是不是 Top3
+                            return top3.includes(context.dataIndex);
+
+                        },
+
+                        formatter: (value, context) => {
+                            if(!value) return '';
+
+                            const code = appData.portfolio[context.dataIndex].code;
+
+                            const total = context.chart.data.datasets[1].data
+                            .reduce((a,b)=>a+b, 0);
+
+                            const pct = total > 0
+                            ? (value / total * 100).toFixed(1)
+                            : '0.0';
+
+                            return `${code} ${pct}%`;
+                        },
+
+                        color: '#111827',
+                        font: {
+                            size: 12,
+                            weight: '600'
+                        },
+
+                        // ✅ 放外側（關鍵好看）
+                        anchor: 'center',
+                        align: 'center',
+
+                        clamp: true, //避免超出邊界
+                        textAlign: 'center'
+                        }
+
+                    }
+                }
+            });
         }
+
+        // ===== bar chart =====
         const ctxB = document.getElementById('chart-bar');
         if(ctxB){
             if(charts.bar) charts.bar.destroy();
             const currentOnlyData = s.chartDataSets.filter(ds => ds.label.includes('(現有)'));
-            charts.bar = new Chart(ctxB, { type: 'bar', data: { labels: Array.from({length:12},(_,i)=>i+1+'月'), datasets: currentOnlyData }, options: { maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + fmt(context.parsed.y); } } } } } });
+            charts.bar = new Chart(ctxB, {
+                type: 'bar',
+                data: { labels: Array.from({length:12},(_,i)=>i+1+'月'), datasets: currentOnlyData },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: { x: { stacked: true }, y: { stacked: true } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (context)=> context.dataset.label + ': ' + fmt(context.parsed.y) } },
+                        datalabels: {
+                            display: false
+                        }
+                    }
+                }
+            });
         }
+
     }
 }
 
@@ -778,8 +992,7 @@ function renderShortTerm() {
             const pl = Math.round(sellTotal - costTotal);
             const plp = costTotal > 0 ? (pl / costTotal) * 100 : 0;
             // 累加收到配息
-            const div = shares * Number(item.divdend || 0 ); 
-
+            const div = shares * Number(item.div || 0 ); 
 
             totalCost += costTotal;
             totalPL += pl + div; // 損益加上配息金額
@@ -1048,6 +1261,27 @@ function updateTargetDate(val) {
     renderShortTerm(); // 重繪表格
 }
 
+//計算成本殖利率 (YoC) 總成本,張數,每股股利
+function getYoC(cost, shares, dividend){
+    if(!cost || !shares) return 0;
+
+    const totalDividend = shares * dividend;
+    return (totalDividend / cost) * 100;
+}
+
+//判斷股票是什麼類型：如殖利率 > 6% 就是配息型，> 0%就是市值型，暫沒有其他投資(如債券)
+function getStockType(cost,shares, dividend){
+    const yoc = getYoC(cost, shares, dividend);
+    const typeOrder = ['市值型', '配息型', '其他'];
+    if (yoc >= 6) {
+        return '配息型';
+    } else if (yoc > 0) {
+        return '市值型';
+    }   else {      
+        return '其他';
+    }
+}
+
 function renderManagement() {
     const i = document.getElementById('input-budget');
     if(i) i.value = appData.budget;
@@ -1064,10 +1298,7 @@ function renderManagement() {
 
         // 3. 【新增】計算成本殖利率 (YoC)
         // 公式：年股利 / 平均成本
-        let yoc = 0;
-        if (avgCost > 0) {
-            yoc = (dividend / avgCost) * 100;
-        }
+        let yoc = getYoC(p.cost,p.shares, dividend);
 
         // 推算合理價 (供目標價參考) 這裡是用合理股價 = 預估年股利 ÷ 期待殖利率
         const priceYield6 = dividend > 0 ? (dividend / 0.06).toFixed(2) : 0;
