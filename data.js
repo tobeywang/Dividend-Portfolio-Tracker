@@ -340,6 +340,16 @@ const DEFAULT_DATA = {
     "shortTermTargetDate": "2026-05-31",
     "shortTerm": [
         {
+            "code": "0050",
+            "name": "元大台灣50",
+            "date": "2026-04-29",
+            "shares": 1000,
+            "cost":  91.65,
+            "price": 97
+        }
+    ],
+    "shortTerm_history": [
+        {
             "code": "0056",
             "name": "元大高股息",
             "date": "2026-01-21",
@@ -413,6 +423,25 @@ const DEFAULT_DATA = {
             "cost": 51.973,
             "price": 53870,
             "div": 1.4
+        },
+        {
+            "code": "0050",
+            "name": "元大台灣高息低波",
+            "date": "2026-05-14",
+            "shares": 1000,
+            "cost": 91.65,
+            "price": 95818,
+            "div": 0
+        },
+        {
+            "code": "0056",
+            "name": "元大台灣高息低波",
+            "date": "2026-05-14",
+            "shares": 15000,
+            "cost": 37.93,
+            "price": 678364,
+            "div": 1.3464
         }
+        
     ]
 };
