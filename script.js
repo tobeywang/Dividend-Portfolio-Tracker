@@ -5,7 +5,9 @@ const STORAGE_KEY = 'my_invest_app_v8_twse';
 
 const STOCK_COLORS = {
     '0050': '#2563eb', '0056': '#dc2626', '00878': '#16a34a',
-    '00713': '#d97706', '006208': '#9333ea', 'default': '#64748b'
+    '00713': '#d97706', '006208': '#9333ea', '2882': '#0ea5e9',   // 新增：青藍色
+    '2887': '#f59e0b',   // 新增：琥珀橘
+    'default': '#64748b'
 };
 function getStockColor(code, isEstimate = false) {
     const baseColor = STOCK_COLORS[code] || STOCK_COLORS['default'];
