@@ -4,16 +4,16 @@ const DEFAULT_DATA = {
         {
             "id": 1,
             "code": "0050",
-            "name": "元大台灣50",
-            "cost": 363972,
-            "shares": 8249,
+            "name": "元大台灣50(國泰證+中信證)",
+            "cost": 454250,
+            "shares": 9249,
             "estShares": 0,
             "div": 1.3599999999999999,
             "divs": [
                 1,
                 0.36
             ],
-            "price": 97,
+            "price": 97.3,
             "months": "1,7",
             "divDates": [
                 22,
@@ -37,7 +37,7 @@ const DEFAULT_DATA = {
                 0.4,
                 0.4
             ],
-            "price": 27.82,
+            "price": 28.27,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -63,7 +63,7 @@ const DEFAULT_DATA = {
                 0.78,
                 0.78
             ],
-            "price": 54.75,
+            "price": 55.7,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -87,7 +87,7 @@ const DEFAULT_DATA = {
                 0.989,
                 3.448
             ],
-            "price": 224.3,
+            "price": 225.05,
             "months": "7,11",
             "divDates": [
                 16,
@@ -111,7 +111,7 @@ const DEFAULT_DATA = {
                 0.866,
                 0.866
             ],
-            "price": 44.85,
+            "price": 46.35,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -129,7 +129,7 @@ const DEFAULT_DATA = {
             "name": "群益台灣精選",
             "cost": 143114,
             "shares": 6000,
-            "estShares": 1000,
+            "estShares": 0,
             "div": 2.58,
             "divs": [
                 0.78,
@@ -137,7 +137,7 @@ const DEFAULT_DATA = {
                 0.54,
                 0.54
             ],
-            "price": 25.47,
+            "price": 26.73,
             "months": "3,6,9,12",
             "divDates": [
                 18,
@@ -149,7 +149,6 @@ const DEFAULT_DATA = {
             "targetPrice": 21.5,
             "targetYield": 12
         },
-        
         {
             "id": 7,
             "code": "2887",
@@ -159,18 +158,17 @@ const DEFAULT_DATA = {
             "estShares": 0,
             "div": 1,
             "divs": [
-                1,
+                1
             ],
             "price": 23.45,
             "months": "8",
             "divDates": [
-                12,
+                12
             ],
             "saveBank": "台新",
             "targetPrice": 23.45,
             "targetYield": 5
         },
-        
         {
             "id": 8,
             "code": "2882",
@@ -180,7 +178,7 @@ const DEFAULT_DATA = {
             "estShares": 0,
             "div": 3.5,
             "divs": [
-                3.5,
+                3.5
             ],
             "price": 78.4,
             "months": "6",
@@ -190,8 +188,7 @@ const DEFAULT_DATA = {
             "saveBank": "國泰",
             "targetPrice": 68,
             "targetYield": 5
-        },
-        
+        }
     ],
     "transactions": [
         {
@@ -344,8 +341,8 @@ const DEFAULT_DATA = {
             "name": "元大台灣50",
             "date": "2026-04-29",
             "shares": 1000,
-            "cost":  91.65,
-            "price": 97
+            "cost": 91.65,
+            "price": 97.3
         }
     ],
     "shortTerm_history": [
@@ -426,7 +423,7 @@ const DEFAULT_DATA = {
         },
         {
             "code": "0050",
-            "name": "元大台灣高息低波",
+            "name": "元大台灣50",
             "date": "2026-05-14",
             "shares": 1000,
             "cost": 91.65,
@@ -435,13 +432,12 @@ const DEFAULT_DATA = {
         },
         {
             "code": "0056",
-            "name": "元大台灣高息低波",
+            "name": "元大高股息",
             "date": "2026-05-14",
             "shares": 15000,
             "cost": 37.93,
             "price": 678364,
             "div": 1.3464
         }
-        
     ]
 };
