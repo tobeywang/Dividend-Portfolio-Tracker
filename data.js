@@ -13,7 +13,7 @@ const DEFAULT_DATA = {
                 1,
                 0.36
             ],
-            "price": 105.5,
+            "price": 111.15,
             "months": "1,7",
             "divDates": [
                 22,
@@ -37,7 +37,7 @@ const DEFAULT_DATA = {
                 0.4,
                 0.4
             ],
-            "price": 31.99,
+            "price": 34.12,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -63,7 +63,7 @@ const DEFAULT_DATA = {
                 0.78,
                 0.78
             ],
-            "price": 57.95,
+            "price": 60.8,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -89,7 +89,7 @@ const DEFAULT_DATA = {
                 0.866,
                 0.866
             ],
-            "price": 51.9,
+            "price": 54.05,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -115,7 +115,7 @@ const DEFAULT_DATA = {
                 0.54,
                 0.54
             ],
-            "price": 30,
+            "price": 30.8,
             "months": "3,6,9,12",
             "divDates": [
                 18,
@@ -248,6 +248,17 @@ const DEFAULT_DATA = {
     ],
     "fundTransactions": [
         {
+            "id": 1782197742712,
+            "date": "2026-06-15",
+            "name": "0050連結累積",
+            "type": "Buy",
+            "nav": 64.15,
+            "units": 77.9,
+            "amount": 5000,
+            "fee": 0,
+            "total": 5000
+        },
+        {
             "id": 1777348287968,
             "date": "2026-05-15",
             "name": "0050連結累積",
@@ -311,7 +322,7 @@ const DEFAULT_DATA = {
             "date": "2026-04-29",
             "shares": 1000,
             "cost": 91.65,
-            "price": 105.5
+            "price": 111.15
         }
     ],
     "shortTerm_history": [
