@@ -5,15 +5,15 @@ const DEFAULT_DATA = {
             "id": 1,
             "code": "0050",
             "name": "元大台灣50(國泰證+中信證)",
-            "cost": 454250,
-            "shares": 9249,
+            "cost": 468293,
+            "shares": 9410,
             "estShares": 0,
             "div": 1.3599999999999999,
             "divs": [
                 1,
                 0.36
             ],
-            "price": 111.15,
+            "price": 107.15,
             "months": "1,7",
             "divDates": [
                 22,
@@ -37,7 +37,7 @@ const DEFAULT_DATA = {
                 0.4,
                 0.4
             ],
-            "price": 34.12,
+            "price": 33.66,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -63,7 +63,7 @@ const DEFAULT_DATA = {
                 0.78,
                 0.78
             ],
-            "price": 60.8,
+            "price": 60.5,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -89,7 +89,7 @@ const DEFAULT_DATA = {
                 0.866,
                 0.866
             ],
-            "price": 54.05,
+            "price": 53.15,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -115,7 +115,7 @@ const DEFAULT_DATA = {
                 0.54,
                 0.54
             ],
-            "price": 30.8,
+            "price": 30.21,
             "months": "3,6,9,12",
             "divDates": [
                 18,
@@ -149,6 +149,14 @@ const DEFAULT_DATA = {
         }
     ],
     "transactions": [
+        {
+            "date": "2026-06-24",
+            "code": "0050",
+            "type": "Buy",
+            "shares": 132,
+            "price": 106.35,
+            "total": 14038
+        },
         {
             "date": "2026-04-27",
             "code": "0056",
@@ -248,7 +256,7 @@ const DEFAULT_DATA = {
     ],
     "fundTransactions": [
         {
-            "id": 1782197742712,
+            "id": 1782350970279,
             "date": "2026-06-15",
             "name": "0050連結累積",
             "type": "Buy",
@@ -322,7 +330,7 @@ const DEFAULT_DATA = {
             "date": "2026-04-29",
             "shares": 1000,
             "cost": 91.65,
-            "price": 111.15
+            "price": 107.15
         }
     ],
     "shortTerm_history": [
