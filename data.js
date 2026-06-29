@@ -5,22 +5,22 @@ const DEFAULT_DATA = {
             "id": 1,
             "code": "0050",
             "name": "元大台灣50(國泰證+中信證)",
-            "cost": 468293,
-            "shares": 9410,
+            "cost": 470273,
+            "shares": 9429,
             "estShares": 0,
             "div": 1.3599999999999999,
             "divs": [
                 1,
                 0.36
             ],
-            "price": 107.15,
+            "price": 103.1,
             "months": "1,7",
             "divDates": [
                 22,
                 21
             ],
             "saveBank": "中信",
-            "targetPrice": 68,
+            "targetPrice": 90.67,
             "targetYield": 1.5
         },
         {
@@ -37,7 +37,7 @@ const DEFAULT_DATA = {
                 0.4,
                 0.4
             ],
-            "price": 33.66,
+            "price": 32.71,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -46,7 +46,7 @@ const DEFAULT_DATA = {
                 18
             ],
             "saveBank": "台新",
-            "targetPrice": 21.13,
+            "targetPrice": 23.5,
             "targetYield": 8
         },
         {
@@ -63,7 +63,7 @@ const DEFAULT_DATA = {
                 0.78,
                 0.78
             ],
-            "price": 60.5,
+            "price": 59.65,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -72,7 +72,7 @@ const DEFAULT_DATA = {
                 19
             ],
             "saveBank": "台灣",
-            "targetPrice": 50.75,
+            "targetPrice": 49.5,
             "targetYield": 8
         },
         {
@@ -81,7 +81,7 @@ const DEFAULT_DATA = {
             "name": "元大高股息",
             "cost": 307380,
             "shares": 8000,
-            "estShares": 0,
+            "estShares": 1000,
             "div": 3.5980000000000003,
             "divs": [
                 0.866,
@@ -89,7 +89,7 @@ const DEFAULT_DATA = {
                 0.866,
                 0.866
             ],
-            "price": 53.15,
+            "price": 51.45,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -107,7 +107,7 @@ const DEFAULT_DATA = {
             "name": "群益台灣精選",
             "cost": 143114,
             "shares": 6000,
-            "estShares": 1000,
+            "estShares": 0,
             "div": 2.8600000000000003,
             "divs": [
                 0.78,
@@ -115,7 +115,7 @@ const DEFAULT_DATA = {
                 0.54,
                 0.54
             ],
-            "price": 30.21,
+            "price": 29.56,
             "months": "3,6,9,12",
             "divDates": [
                 18,
@@ -124,7 +124,7 @@ const DEFAULT_DATA = {
                 16
             ],
             "saveBank": "中信",
-            "targetPrice": 21.5,
+            "targetPrice": 23.83,
             "targetYield": 12
         },
         {
@@ -138,13 +138,13 @@ const DEFAULT_DATA = {
             "divs": [
                 3.5
             ],
-            "price": 78.4,
+            "price": 106,
             "months": "6",
             "divDates": [
                 30
             ],
             "saveBank": "國泰",
-            "targetPrice": 68,
+            "targetPrice": 70,
             "targetYield": 5
         }
     ],
@@ -330,7 +330,7 @@ const DEFAULT_DATA = {
             "date": "2026-04-29",
             "shares": 1000,
             "cost": 91.65,
-            "price": 107.15
+            "price": 103.1
         }
     ],
     "shortTerm_history": [
