@@ -5,15 +5,15 @@ const DEFAULT_DATA = {
             "id": 1,
             "code": "0050",
             "name": "元大台灣50(國泰證+中信證)",
-            "cost": 470273,
-            "shares": 9429,
+            "cost": 477321,
+            "shares": 9500,
             "estShares": 0,
-            "div": 1.3599999999999999,
+            "div": 1.6,
             "divs": [
                 1,
-                0.36
+                0.6
             ],
-            "price": 103.1,
+            "price": 100.15,
             "months": "1,7",
             "divDates": [
                 22,
@@ -37,7 +37,7 @@ const DEFAULT_DATA = {
                 0.4,
                 0.4
             ],
-            "price": 32.71,
+            "price": 31.81,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -63,7 +63,7 @@ const DEFAULT_DATA = {
                 0.78,
                 0.78
             ],
-            "price": 59.65,
+            "price": 60.25,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -82,14 +82,14 @@ const DEFAULT_DATA = {
             "cost": 307380,
             "shares": 8000,
             "estShares": 1000,
-            "div": 3.5980000000000003,
+            "div": 4.082,
             "divs": [
                 0.866,
                 1,
-                0.866,
+                1.35,
                 0.866
             ],
-            "price": 51.45,
+            "price": 50.75,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -115,7 +115,7 @@ const DEFAULT_DATA = {
                 0.54,
                 0.54
             ],
-            "price": 29.56,
+            "price": 28.93,
             "months": "3,6,9,12",
             "divDates": [
                 18,
@@ -138,7 +138,7 @@ const DEFAULT_DATA = {
             "divs": [
                 3.5
             ],
-            "price": 106,
+            "price": 94.3,
             "months": "6",
             "divDates": [
                 30
@@ -149,6 +149,14 @@ const DEFAULT_DATA = {
         }
     ],
     "transactions": [
+        {
+            "date": "2026-07-20",
+            "code": "0050",
+            "type": "Buy",
+            "shares": 71,
+            "price": 99.25,
+            "total": 7047
+        },
         {
             "date": "2026-06-24",
             "code": "0050",
@@ -330,7 +338,7 @@ const DEFAULT_DATA = {
             "date": "2026-04-29",
             "shares": 1000,
             "cost": 91.65,
-            "price": 103.1
+            "price": 100.15
         }
     ],
     "shortTerm_history": [
