@@ -248,12 +248,13 @@ function renderDashboard() {
                 const type = getStockType(p.cost, p.shares, Number(p.div));
                 // const type = getStockType(p.price, p.shares, Number(p.div),targetYield = "current");
 
-                // 內圈加總用 cost
-                grouped[type] = (grouped[type] || 0) + (p.cost || 0);
+                // 內圈與外圈都以市值計算，與再平衡建議保持一致
+                const mv = getMarketValue(p);
+                grouped[type] = (grouped[type] || 0) + mv;
 
                 // 外圈：每檔股票
                 outerLabels.push(p.name);
-                outerData.push(p.cost || 0);
+                outerData.push(mv);
                 outerColors.push(getStockColor(p.code)); // 你原本的個股顏色規則
                 outerTypes.push(type);
             });
@@ -598,8 +599,8 @@ function renderPortfolio() {
 // 重要：key 必須與 getStockType 回傳完全一致：市值型/配息型/其他
 // ==============================
 const TARGET_ALLOCATION = {
-  市值型: 0.3,  // 範例：你提到的 28.7%
-  配息型: 0.7,  // 範例：你提到的 71.3%
+  市值型: 0.4,  
+  配息型: 0.6, 
   其他: 0
 };
 
@@ -684,6 +685,8 @@ function getRebalanceActions() {
   };
 }
 
+const MAX_REBALANCE_RECOMMENDED_STOCKS = 3;
+
 // ==============================
 // 2) getBudgetRebalance(base, budget)
 //    - 只做「加碼」：找出類別 gapMV>0 的類別
@@ -754,46 +757,74 @@ function getBudgetRebalance(base, budget) {
     };
   }
 
-  // 第一輪：按 needMV 比例分配預算並換算股數
-  let actions = candidates.map(c => {
-    const alloc = B * (c.needMV / totalStockNeed);
-    const shares = Math.floor(alloc / c.price);
-    const amount = shares * c.price;
-    return { ...c, alloc, shares, amount };
-  });
+  const singleStockMode = B <= 10000;
 
-  // 算投入/剩餘
-  let invested = actions.reduce((s, a) => s + a.amount, 0);
-  let remaining = B - invested;
+  let actions;
+  if (singleStockMode) {
+    const ranked = candidates.slice().sort((a, b) => (b.needMV - a.needMV) || (b.price - a.price));
+    const top = ranked[0];
 
-  // 補零碎：用剩餘預算買 1 股 1 股補到「剩餘 need」最大且買得起的
-  let guard = 0;
-  const MAX_LOOP = 2000;
+    if (!top) {
+      return {
+        actions: [],
+        invested: 0,
+        remaining: B,
+        typeBuy: { 市值型: 0, 配息型: 0, 其他: 0 }
+      };
+    }
 
-  while (remaining > 0 && guard < MAX_LOOP) {
-    guard++;
-
-    // 還有剩餘需求且買得起 1 股
-    const affordable = actions.filter(a => {
-      const remainNeed = a.needMV - a.amount;
-      return remainNeed >= a.price && a.price <= remaining;
+    const shares = Math.max(0, Math.floor(B / top.price));
+    const amount = shares * top.price;
+    actions = [{ ...top, alloc: B, shares, amount }];
+  } else {
+    // 第一輪：按 needMV 比例分配預算並換算股數
+    actions = candidates.map(c => {
+      const alloc = B * (c.needMV / totalStockNeed);
+      const shares = Math.floor(alloc / c.price);
+      const amount = shares * c.price;
+      return { ...c, alloc, shares, amount };
     });
 
-    if (!affordable.length) break;
+    // 算投入/剩餘
+    let invested = actions.reduce((s, a) => s + a.amount, 0);
+    let remaining = B - invested;
 
-    affordable.sort((a, b) => (b.needMV - b.amount) - (a.needMV - a.amount));
+    // 補零碎：用剩餘預算買 1 股 1 股補到「剩餘 need」最大且買得起的
+    let guard = 0;
+    const MAX_LOOP = 2000;
 
-    const pick = affordable[0];
-    pick.shares += 1;
-    pick.amount += pick.price;
-    remaining -= pick.price;
+    while (remaining > 0 && guard < MAX_LOOP) {
+      guard++;
+
+      // 還有剩餘需求且買得起 1 股
+      const affordable = actions.filter(a => {
+        const remainNeed = a.needMV - a.amount;
+        return remainNeed >= a.price && a.price <= remaining;
+      });
+
+      if (!affordable.length) break;
+
+      affordable.sort((a, b) => (b.needMV - b.amount) - (a.needMV - a.amount));
+
+      const pick = affordable[0];
+      pick.shares += 1;
+      pick.amount += pick.price;
+      remaining -= pick.price;
+    }
+
+    invested = actions.reduce((s, a) => s + a.amount, 0);
+    remaining = B - invested;
+
+    // 清掉 shares=0，排序（投入金額大者優先）
+    actions = actions.filter(a => a.shares > 0).sort((a, b) => b.amount - a.amount);
   }
 
-  invested = actions.reduce((s, a) => s + a.amount, 0);
-  remaining = B - invested;
+  actions = actions
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, MAX_REBALANCE_RECOMMENDED_STOCKS);
 
-  // 清掉 shares=0，排序（投入金額大者優先）
-  actions = actions.filter(a => a.shares > 0).sort((a, b) => b.amount - a.amount);
+  let invested = actions.reduce((s, a) => s + a.amount, 0);
+  let remaining = B - invested;
 
   // 類別買入金額匯總（你要的「股數×現值」）
   const typeBuy = { 市值型: 0, 配息型: 0, 其他: 0 };
