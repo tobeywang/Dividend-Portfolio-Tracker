@@ -620,11 +620,20 @@
         </div>
                 
 
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-6">
-            <label class="block text-sm font-bold mb-2">總投資預算</label>
-            <div class="flex items-center gap-2 border-b-2 border-blue-500 pb-1 w-64">
-                <span class="font-bold text-slate-400">NT\$</span>
-                <input type="number" id="input-budget" class="border-none outline-none text-xl font-bold text-left p-0" onchange="updateBudget(this.value)">
+        <div class="flex flex-col md:flex-row gap-4 mb-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex-1">
+                <label class="block text-sm font-bold mb-2">總金額</label>
+                <div class="flex items-center gap-2 border-b-2 border-blue-500 pb-1 w-64">
+                    <span class="font-bold text-slate-400">NT\$</span>
+                    <input type="number" id="input-budget" class="border-none outline-none text-xl font-bold text-left p-0" onchange="updateBudget(this.value)">
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex-1">
+                <label class="block text-sm font-bold mb-2">總投資預算</label>
+                <div class="flex items-center gap-2 border-b-2 border-blue-500 pb-1 w-64">
+                    <span class="font-bold text-slate-400">NT\$</span>
+                    <input type="number" id="input-budget-2" class="border-none outline-none text-xl font-bold text-left p-0" value="775000" readonly>
+                </div>
             </div>
         </div>
         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
