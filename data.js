@@ -5,15 +5,15 @@ const DEFAULT_DATA = {
             "id": 1,
             "code": "0050",
             "name": "元大台灣50(國泰證+中信證)",
-            "cost": 477321,
-            "shares": 9500,
+            "cost": 486970,
+            "shares": 9630,
             "estShares": 0,
             "div": 1.6,
             "divs": [
                 1,
                 0.6
             ],
-            "price": 100.15,
+            "price": 97.15,
             "months": "1,7",
             "divDates": [
                 22,
@@ -21,7 +21,7 @@ const DEFAULT_DATA = {
             ],
             "saveBank": "中信",
             "targetPrice": 90.67,
-            "targetYield": 1.5
+            "targetYield": 2
         },
         {
             "id": 2,
@@ -37,7 +37,7 @@ const DEFAULT_DATA = {
                 0.4,
                 0.4
             ],
-            "price": 31.81,
+            "price": 31.5,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -63,7 +63,7 @@ const DEFAULT_DATA = {
                 0.78,
                 0.78
             ],
-            "price": 60.25,
+            "price": 60.4,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -89,7 +89,7 @@ const DEFAULT_DATA = {
                 1.35,
                 0.866
             ],
-            "price": 50.75,
+            "price": 48.19,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -115,7 +115,7 @@ const DEFAULT_DATA = {
                 0.54,
                 0.54
             ],
-            "price": 28.93,
+            "price": 28.89,
             "months": "3,6,9,12",
             "divDates": [
                 18,
@@ -138,7 +138,7 @@ const DEFAULT_DATA = {
             "divs": [
                 3.5
             ],
-            "price": 94.3,
+            "price": 95.4,
             "months": "6",
             "divDates": [
                 30
@@ -149,6 +149,22 @@ const DEFAULT_DATA = {
         }
     ],
     "transactions": [
+        {
+            "date": "2026-07-29",
+            "code": "0050",
+            "type": "Buy",
+            "shares": 50,
+            "price": 93.9,
+            "total": 4695
+        },
+        {
+            "date": "2026-07-28",
+            "code": "0050",
+            "type": "Buy",
+            "shares": 51,
+            "price": 97.1,
+            "total": 4952
+        },
         {
             "date": "2026-07-20",
             "code": "0050",
@@ -338,7 +354,7 @@ const DEFAULT_DATA = {
             "date": "2026-04-29",
             "shares": 1000,
             "cost": 91.65,
-            "price": 100.15
+            "price": 97.15
         }
     ],
     "shortTerm_history": [
