@@ -13,14 +13,14 @@ const DEFAULT_DATA = {
                 1,
                 0.6
             ],
-            "price": 97.15,
+            "price": 102.85,
             "months": "1,7",
             "divDates": [
                 22,
                 21
             ],
             "saveBank": "中信",
-            "targetPrice": 90.67,
+            "targetPrice": 80,
             "targetYield": 2
         },
         {
@@ -30,14 +30,14 @@ const DEFAULT_DATA = {
             "cost": 400235,
             "shares": 18000,
             "estShares": 0,
-            "div": 1.88,
+            "div": 2.4899999999999998,
             "divs": [
                 0.42,
                 0.66,
-                0.4,
+                1.01,
                 0.4
             ],
-            "price": 31.5,
+            "price": 32.43,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -46,7 +46,7 @@ const DEFAULT_DATA = {
                 18
             ],
             "saveBank": "台新",
-            "targetPrice": 23.5,
+            "targetPrice": 31.12,
             "targetYield": 8
         },
         {
@@ -63,7 +63,7 @@ const DEFAULT_DATA = {
                 0.78,
                 0.78
             ],
-            "price": 60.4,
+            "price": 61.2,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -81,7 +81,7 @@ const DEFAULT_DATA = {
             "name": "元大高股息",
             "cost": 307380,
             "shares": 8000,
-            "estShares": 1000,
+            "estShares": 0,
             "div": 4.082,
             "divs": [
                 0.866,
@@ -89,7 +89,7 @@ const DEFAULT_DATA = {
                 1.35,
                 0.866
             ],
-            "price": 48.19,
+            "price": 49.48,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -98,8 +98,8 @@ const DEFAULT_DATA = {
                 23
             ],
             "saveBank": "中信",
-            "targetPrice": 35.98,
-            "targetYield": 10
+            "targetPrice": 45.36,
+            "targetYield": 9
         },
         {
             "id": 6,
@@ -115,7 +115,7 @@ const DEFAULT_DATA = {
                 0.54,
                 0.54
             ],
-            "price": 28.89,
+            "price": 29.57,
             "months": "3,6,9,12",
             "divDates": [
                 18,
@@ -124,8 +124,8 @@ const DEFAULT_DATA = {
                 16
             ],
             "saveBank": "中信",
-            "targetPrice": 23.83,
-            "targetYield": 12
+            "targetPrice": 28.6,
+            "targetYield": 10
         },
         {
             "id": 8,
@@ -138,7 +138,7 @@ const DEFAULT_DATA = {
             "divs": [
                 3.5
             ],
-            "price": 95.4,
+            "price": 101.5,
             "months": "6",
             "divDates": [
                 30
@@ -354,7 +354,7 @@ const DEFAULT_DATA = {
             "date": "2026-04-29",
             "shares": 1000,
             "cost": 91.65,
-            "price": 97.15
+            "price": 102.85
         }
     ],
     "shortTerm_history": [
