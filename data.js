@@ -13,7 +13,7 @@ const DEFAULT_DATA = {
                 1,
                 0.6
             ],
-            "price": 102.85,
+            "price": 103.8,
             "months": "1,7",
             "divDates": [
                 22,
@@ -37,7 +37,7 @@ const DEFAULT_DATA = {
                 1.01,
                 0.4
             ],
-            "price": 32.43,
+            "price": 33.15,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -63,7 +63,7 @@ const DEFAULT_DATA = {
                 0.78,
                 0.78
             ],
-            "price": 61.2,
+            "price": 61.1,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -89,7 +89,7 @@ const DEFAULT_DATA = {
                 1.35,
                 0.866
             ],
-            "price": 49.48,
+            "price": 51.45,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -105,8 +105,8 @@ const DEFAULT_DATA = {
             "id": 6,
             "code": "00919",
             "name": "群益台灣精選",
-            "cost": 143114,
-            "shares": 6000,
+            "cost": 172695,
+            "shares": 7000,
             "estShares": 0,
             "div": 2.8600000000000003,
             "divs": [
@@ -115,7 +115,7 @@ const DEFAULT_DATA = {
                 0.54,
                 0.54
             ],
-            "price": 29.57,
+            "price": 29.94,
             "months": "3,6,9,12",
             "divDates": [
                 18,
@@ -138,7 +138,7 @@ const DEFAULT_DATA = {
             "divs": [
                 3.5
             ],
-            "price": 101.5,
+            "price": 100.5,
             "months": "6",
             "divDates": [
                 30
@@ -149,6 +149,14 @@ const DEFAULT_DATA = {
         }
     ],
     "transactions": [
+        {
+            "date": "2026-08-06",
+            "code": "00919",
+            "type": "Buy",
+            "shares": 797,
+            "price": 29.59,
+            "total": 23583
+        },
         {
             "date": "2026-07-29",
             "code": "0050",
@@ -354,7 +362,7 @@ const DEFAULT_DATA = {
             "date": "2026-04-29",
             "shares": 1000,
             "cost": 91.65,
-            "price": 102.85
+            "price": 103.8
         }
     ],
     "shortTerm_history": [
