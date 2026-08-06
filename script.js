@@ -640,7 +640,8 @@ function getRebalanceActions() {
       type,
       price: n(p.price),
       mv,
-      shares
+      shares,
+      dividend
     };
   });
   const totalMV = stockBase.reduce((sum, s) => sum + s.mv, 0);
@@ -734,14 +735,25 @@ function getBudgetRebalance(base, budget) {
     const typeGap = typeSummary[t].gapMV || 0;
 
     list.forEach(s => {
-      const w = typeCurMV > 0 ? (s.mv / typeCurMV) : (1 / list.length);
-      const stockNeedMV = typeGap * w; // 該檔股票「理論應補」的市值
+      const marketWeight = typeCurMV > 0 ? (s.mv / typeCurMV) : (1 / list.length);
+      const yieldPct = getCurrentYield(n(s.dividend), s.price);
+      const maxYield = Math.max(...list.map(item => getCurrentYield(n(item.dividend), item.price)), 0);
+      const yieldNorm = maxYield > 0 ? (yieldPct / maxYield) : 0;
+
+      const weightYield = (t === '配息型') ? 0.7 : 0.3;
+      const weightMarket = (t === '配息型') ? 0.3 : 0.7;
+      const score = (weightYield * yieldNorm) + (weightMarket * marketWeight);
+      const stockNeedMV = typeGap * score;
+
       if (stockNeedMV > 0) {
         candidates.push({
           code: s.code,
           type: s.type,
           price: s.price,
-          needMV: stockNeedMV
+          needMV: stockNeedMV,
+          score,
+          yieldPct,
+          marketWeight
         });
       }
     });
@@ -761,7 +773,7 @@ function getBudgetRebalance(base, budget) {
 
   let actions;
   if (singleStockMode) {
-    const ranked = candidates.slice().sort((a, b) => (b.needMV - a.needMV) || (b.price - a.price));
+    const ranked = candidates.slice().sort((a, b) => (b.score - a.score) || (b.needMV - a.needMV) || (b.price - a.price));
     const top = ranked[0];
 
     if (!top) {
@@ -958,7 +970,7 @@ function renderRebalancePanel() {
         <div class="flex justify-between bg-blue-50 px-3 py-2 rounded-lg border border-blue-100">
           <div class="flex flex-col">
             <span class="font-bold text-slate-800">${i + 1}. ${a.code}</span>
-            <span class="text-[11px] text-slate-500">${a.type}｜單價 ${a.price}</span>
+            <span class="text-[11px] text-slate-500">${a.type}｜單價 ${a.price}｜分數 ${Number(a.score || 0).toFixed(3)}</span>
           </div>
           <div class="text-right">
             <div class="text-blue-700 font-bold">+${a.shares} 股</div>
@@ -971,6 +983,8 @@ function renderRebalancePanel() {
 }
 
 // ======================== 投資組合再平衡建議 ====================
+
+// ======================== 配息分析 =============================
 function renderAnalysis() {
     const s = calcStats();
     if(typeof Chart !== 'undefined'){
@@ -991,6 +1005,15 @@ function renderAnalysis() {
                     },
                     plugins: { 
                         legend: { position: 'bottom' },
+                        datalabels: {
+                            // 只顯示非0數值(每支股票每個月配的數字不同，如果是0代表沒有配，這裡要濾掉)
+                            formatter: function(value) {
+                                return value > 0
+                                    ? new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 }).format(value)
+                                    : null;
+                            }
+
+                        },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
@@ -1032,7 +1055,9 @@ function renderAnalysis() {
                                     // 繪製文字 (位置稍微往上 -5px)
                                     // 使用 fmt() 函式將數字轉為貨幣格式 (例如 "\$12,345")
                                     // 如果覺得字太長，可以改用 parseInt(total).toLocaleString()
-                                    ctx.fillText(parseInt(total).toLocaleString(), x, y - 5);
+                                    const totalNew = new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 }).format(total)
+
+                                    ctx.fillText(totalNew, x, y - 5);
                                 }
                             });
                         }
@@ -1060,6 +1085,7 @@ function renderAnalysis() {
         </div>`;
     }).join('');
 }
+// ======================== 配息分析 =============================
 
 function renderTransactions() {
     // 1. 處理下拉選單
@@ -1994,7 +2020,9 @@ function reloadDataFromFile() {
 // --- 5. 證交所 API 查詢功能 (New) ---
 const API_CONFIG = {
     // 統一使用您的 Worker 網址
-    all: 'https://woker-stock-all.hebeplkj.workers.dev/'
+    all: 'https://woker-stock-all.hebeplkj.workers.dev/',
+    last: 'https://querydividend.hebeplkj.workers.dev/api/new',
+    stock: 'https://querydividend.hebeplkj.workers.dev/api/stock'
 };
 
 // 因為是撈取全部資料，所以隱藏輸入框，只保留類型選擇
@@ -2264,7 +2292,149 @@ function syncPricesToPortfolio(data) {
     }
 }
 
-// --- 6. 全局初始化 ---
+
+// --- 6. 證交所 API 查詢除息 ---
+//header Key
+const API_KEY = 'TWSE_D1_v1_Nr8xP7Kq4Lm2Yw9Zj5Hs6Bc3Fd1Qa8R';
+
+async function fetchTwseDivdendData() {
+    const keyword = document
+        .getElementById('stockCodeDivdend')
+        .value
+        .trim()
+        .toUpperCase();
+
+    const msgDiv = document.getElementById('twse-messageDivdend');
+    const loadingDiv = document.getElementById('twse-loadingDivdend');
+    const resultsDiv = document.getElementById('twse-resultsDivdend');
+    const statsDiv = document.getElementById('twse-statsDivdend');
+    const btn = document.getElementById('queryBtnDivdend');
+
+    // UI 重置
+    msgDiv.innerHTML = ''; 
+    resultsDiv.innerHTML = ''; 
+    statsDiv.classList.add('hidden'); 
+    resultsDiv.classList.add('hidden');
+    loadingDiv.classList.remove('hidden'); 
+    btn.disabled = true; 
+    btn.classList.add('opacity-50');
+
+    try {
+        // 1. 呼叫統一的 Worker API
+		// 加入 API KEY Header
+        let url = API_CONFIG.last
+        if(keyword)
+            url = `${API_CONFIG.stock}?code=${encodeURIComponent(keyword)}`;
+
+        const res = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': API_KEY
+            }
+        });
+        
+        if (!res.ok) throw new Error(`HTTP 錯誤! 狀態: ${res.status}`);
+        
+        const rawData = await res.json();
+        
+        // 2. 確保資料格式正確 (假設回傳的是一個大陣列)
+        let allData = [];
+
+		if (rawData.success && Array.isArray(rawData.data)) {
+			allData = rawData.data;
+		}
+
+
+        // 3. 顯示結果
+        displayTwseDivdendResults(allData, apiType);
+
+
+    } catch (err) {
+        msgDiv.innerHTML = `<div class="bg-red-50 text-red-600 p-3 rounded text-sm border border-red-200">查詢失敗：${err.message}</div>`;
+        console.error(err);
+    } finally {
+        loadingDiv.classList.add('hidden'); 
+        btn.disabled = false; 
+        btn.classList.remove('opacity-50');
+    }
+}
+
+function displayTwseDivdendResults(data, apiType) {
+    const resultsDiv = document.getElementById('twse-resultsDivdend');
+    const msgDiv = document.getElementById('twse-messageDivdend');
+    const statsDiv = document.getElementById('twse-statsDivdend');
+
+    if (!data || data.length === 0) {
+        msgDiv.innerHTML = '<div class="bg-blue-50 text-blue-600 p-3 rounded text-sm">查無符合類型的資料</div>';
+        return;
+    }
+
+    resultsDiv.classList.remove('hidden');
+    statsDiv.classList.remove('hidden');
+
+    let html = `
+        <div class="p-3 bg-gray-50 border-b text-sm text-gray-500 sticky left-0">
+            共找到 <b>${data.length}</b> 筆資料
+        </div>
+        <table class="w-full text-left whitespace-nowrap border-collapse">
+            <thead class="bg-teal-50 text-teal-800 text-sm font-bold">
+                <tr>
+                    <!-- 關鍵修改：加入 sticky top-0 z-10 來凍結標題 -->
+                    <th class="p-3 sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">除息日</th>
+                    <th class="p-3 sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">股票代號</th>
+                    <th class="p-3 sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">名稱</th>
+                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">現金股利</th>
+                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">股票股利</th>
+                    <th class="p-3 sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">更新時間</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">`;
+
+    let totalVol = 0;
+    data.forEach(item => {
+        // 1. 欄位對應
+        const code = item.Code || '-';
+        const name = item.n || item.Name || item.name || '-';        
+		// 除息日
+        const exDate = item.Date || '-';
+		const logTime = item.UpdateTime
+		? new Date(item.UpdateTime).toLocaleString('zh-TW')
+		: '-';
+        
+        // 2. 數值處理
+        const stockDivid = parseFloat(item.StockDividendRatio || '0' );
+        const CashDivid = parseFloat(item.CashDividend || '0');
+
+        html += `
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="p-3 font-bold text-slate-700">
+                    ${exDate}
+                </td>
+                <td class="p-3 font-medium">${code}</td>
+                <td class="p-3 font-bold">${name}</td>
+                <td class="p-3 text-right ">${CashDivid}</td>
+                <td class="p-3 text-right ">${stockDivid}</td>
+                <td class="p-3 text-slate-500">${logTime}</td>
+            </tr>`;
+            
+    });
+
+    html += '</tbody></table>';
+    resultsDiv.innerHTML = html;
+
+    document.getElementById('totalCountDivdend').textContent = data.length;
+}
+
+function clearTwseDivdendResults() {
+    document.getElementById('stockCodeDivdend').value = '';
+    document.getElementById('twse-messageDivdend').innerHTML = '';
+    document.getElementById('twse-resultsDivdend').innerHTML = '';
+    document.getElementById('twse-resultsDivdend').classList.add('hidden');
+    document.getElementById('twse-statsDivdend').classList.add('hidden');
+}
+
+// --- 7. 全局初始化 ---
 function renderAll() { 
     renderDashboard(); 
     renderPortfolio(); 
@@ -2285,7 +2455,7 @@ function switchTab(t) {
     
     const b = document.getElementById('nav-'+t); 
     if(b) {
-        if(t === 'twse') b.classList.add('active', 'bg-teal-600', 'text-white');
+        if(t === 'twse' || t === 'twse-div') b.classList.add('active', 'bg-teal-600', 'text-white');
         else if(t === 'div-settings') b.classList.add('active', 'bg-purple-600', 'text-white');
         else if(t === 'short') b.classList.add('active', 'bg-orange-600', 'text-white'); // 新增這行
         else b.classList.add('active', 'bg-blue-600', 'text-white');
@@ -2307,7 +2477,7 @@ function switchTab(t) {
     else if(t==='management') renderManagement();
 }
 
-// --- 7.手機版下拉選單控制邏輯 ---
+// --- 8.手機版下拉選單控制邏輯 ---
 
 // 1. 切換選單顯示/隱藏
 // ✅ 主要功能選單（≡）
