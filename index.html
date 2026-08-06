@@ -95,6 +95,11 @@
                     <i class="ri-search-line text-lg"></i> 證交所行情
                 </button>
 
+                <!-- 證交所除息 -->
+                <button onclick="switchTab('twse-div')" id="nav-twse-div" class="nav-item w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-left text-sm text-slate-600 hover:text-teal-700 hover:bg-teal-50">
+                    <i class="ri-money-dollar-box-line text-lg"></i> 證交所除息
+                </button>
+
                 <!-- 子功能區塊 (內縮) -->
                 <!-- <div class="pl-4 mt-1 space-y-1 border-l-2 border-slate-100 ml-4">
                     <button onclick="switchTab('div-settings')" id="nav-div-settings" class="nav-item w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-left text-sm text-slate-600 hover:text-purple-700 hover:bg-purple-50">
@@ -189,6 +194,11 @@
                 <button onclick="switchTabMobile('twse')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-700 flex items-center gap-3 transition-colors">
                     <i class="ri-search-line text-lg text-slate-400"></i> 
                     證交所行情
+                </button>
+                
+                <!-- 選項 4: 證交所除息 -->
+                <button onclick="switchTabMobile('twse-div')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-700 flex items-center gap-3 transition-colors">
+                    <i class="ri-money-dollar-box-line text-lg text-slate-400"></i> 證交所除息
                 </button>
             </div>
         </div>
@@ -544,8 +554,6 @@
 
         </div>
     
-    
-
         <!-- NEW: TWSE Query (證交所查詢頁面) -->
         <div id="view-twse" class="page-view hidden fade-in">
             <h2 class="text-2xl font-bold mb-6">證交所 ETF/個股 日成交資訊</h2>
@@ -596,6 +604,42 @@
 
             <!-- 結果表格 -->
             <div id="twse-results" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto overflow-y-auto max-h-[70vh] hidden relative"></div>
+        </div>
+
+        <!-- NEW: TWSE 除息 Query (證交所查詢頁面) -->
+        <div id="view-twse-div" class="page-view hidden fade-in">
+            <h2 class="text-2xl font-bold mb-6">證交所 ETF/個股 除權息資訊</h2>
+            <p>資料更新:T - 1 營業日</p>
+            <!-- 查詢區塊 -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    
+                    <div id="stockCodeGroupDivdend">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">股票代號/名稱</label>
+                        <input type="text" id="stockCodeDivdend" placeholder="例如: 0050" class="w-full border rounded px-3 py-2 text-left">
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button id="queryBtnDivdend" onclick="fetchTwseDivdendData()" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded flex-1"><i class="ri-search-line"></i> 查詢</button>
+                        <button onclick="clearTwseDivdendResults()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded"><i class="ri-delete-bin-line"></i> 清除</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 狀態顯示 -->
+            <div id="twse-loadingDivdend" class="hidden text-center p-4 text-gray-500"><i class="ri-loader-4-line animate-spin"></i> 資料載入中，請稍候...</div>
+            <div id="twse-messageDivdend" class="mb-4"></div>
+
+            <!-- 統計資訊 -->
+            <div id="twse-statsDivdend" class="hidden grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-teal-50 p-4 rounded-lg border border-teal-100 text-center">
+                    <div class="text-xs text-teal-600">總筆數</div>
+                    <div class="text-xl font-bold text-teal-800" id="totalCountDivdend">0</div>
+                </div>
+            </div>
+
+            <!-- 結果表格 -->
+            <div id="twse-resultsDivdend" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto overflow-y-auto max-h-[70vh] hidden relative"></div>
         </div>
 
         <!-- 6. Management -->
