@@ -13,15 +13,19 @@ const DEFAULT_DATA = {
                 1,
                 0.6
             ],
-            "price": 103.8,
+            "price": 103.3,
             "months": "1,7",
             "divDates": [
                 22,
                 21
             ],
+            "divClosePrice": [
+                0,
+                0
+            ],
             "saveBank": "中信",
-            "targetPrice": 80,
-            "targetYield": 2
+            "targetPrice": 90,
+            "targetYield": 3
         },
         {
             "id": 2,
@@ -37,7 +41,7 @@ const DEFAULT_DATA = {
                 1.01,
                 0.4
             ],
-            "price": 33.15,
+            "price": 32.84,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -45,9 +49,15 @@ const DEFAULT_DATA = {
                 18,
                 18
             ],
+            "divClosePrice": [
+                0,
+                0,
+                0,
+                0
+            ],
             "saveBank": "台新",
-            "targetPrice": 31.12,
-            "targetYield": 8
+            "targetPrice": 29,
+            "targetYield": 10
         },
         {
             "id": 3,
@@ -71,9 +81,15 @@ const DEFAULT_DATA = {
                 19,
                 19
             ],
+            "divClosePrice": [
+                0,
+                0,
+                0,
+                0
+            ],
             "saveBank": "台灣",
-            "targetPrice": 49.5,
-            "targetYield": 8
+            "targetPrice": 56.57,
+            "targetYield": 7
         },
         {
             "id": 5,
@@ -89,7 +105,13 @@ const DEFAULT_DATA = {
                 1.35,
                 0.866
             ],
-            "price": 51.45,
+            "divClosePrice": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "price": 51.3,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -98,7 +120,7 @@ const DEFAULT_DATA = {
                 23
             ],
             "saveBank": "中信",
-            "targetPrice": 45.36,
+            "targetPrice": 48,
             "targetYield": 9
         },
         {
@@ -115,13 +137,19 @@ const DEFAULT_DATA = {
                 0.54,
                 0.54
             ],
-            "price": 29.94,
+            "price": 29.6,
             "months": "3,6,9,12",
             "divDates": [
                 18,
                 16,
                 16,
                 16
+            ],
+            "divClosePrice": [
+                0,
+                0,
+                0,
+                0
             ],
             "saveBank": "中信",
             "targetPrice": 28.6,
@@ -138,14 +166,17 @@ const DEFAULT_DATA = {
             "divs": [
                 3.5
             ],
-            "price": 100.5,
+            "price": 97.5,
             "months": "6",
             "divDates": [
                 30
             ],
+            "divClosePrice": [
+                0
+            ],
             "saveBank": "國泰",
-            "targetPrice": 70,
-            "targetYield": 5
+            "targetPrice": 35,
+            "targetYield": 10
         }
     ],
     "transactions": [
@@ -362,7 +393,7 @@ const DEFAULT_DATA = {
             "date": "2026-04-29",
             "shares": 1000,
             "cost": 91.65,
-            "price": 103.8
+            "price": 103.3
         }
     ],
     "shortTerm_history": [
