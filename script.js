@@ -100,6 +100,66 @@ function importDataFunc(inputElement) {
 var appData = loadData();
 var charts = { pie: null, bar: null, detailBar: null };
 const fmt = (n) => new Intl.NumberFormat('zh-TW', { style: 'currency', currency: 'TWD', maximumFractionDigits: 0 }).format(n);
+const portfolioSortState = { key: 'mv', direction: 'desc' };
+const dividendSortState = { key: 'Date', direction: 'desc' };
+let currentDividendData = [];
+let currentDividendApiType = 'last';
+
+function getPortfolioSortValue(entry, key) {
+    switch (key) {
+        case 'code': return String(entry.code || '');
+        case 'name': return String(entry.name || '');
+        case 'shares': return Number(entry.shares || 0);
+        case 'estShares': return Number(entry.estShares || 0);
+        case 'cost': return Number(entry.cost || 0);
+        case 'price': return Number(entry.price || 0);
+        case 'mv': return Number(entry.shares || 0) * Number(entry.price || 0);
+        case 'pf': return (Number(entry.shares || 0) * Number(entry.price || 0)) - Number(entry.cost || 0);
+        case 'yoc': return getYoC(entry.cost, entry.shares, entry.div);
+        case 'cy': return getCurrentYield(entry.div, entry.price);
+        default: return 0;
+    }
+}
+
+function sortPortfolioTable(key) {
+    if (portfolioSortState.key === key) {
+        portfolioSortState.direction = portfolioSortState.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        portfolioSortState.key = key;
+        portfolioSortState.direction = ['code', 'name'].includes(key) ? 'asc' : 'desc';
+    }
+
+    renderPortfolio();
+}
+
+function bindPortfolioSortHandlers() {
+    document.querySelectorAll('[data-sort-key]').forEach(th => {
+        th.onclick = () => sortPortfolioTable(th.dataset.sortKey);
+    });
+    updatePortfolioSortIndicators();
+}
+
+function updatePortfolioSortIndicators() {
+    const labels = {
+        code: '代號',
+        name: '名稱',
+        shares: '持有股數',
+        estShares: '預估',
+        cost: '總成本',
+        price: '現價',
+        mv: '市值',
+        pf: '損益',
+        yoc: 'YoC',
+        cy: '現價殖利率(CY)'
+    };
+
+    document.querySelectorAll('#view-portfolio [data-sort-key]').forEach(th => {
+        const key = th.dataset.sortKey;
+        const isActive = portfolioSortState.key === key;
+        const arrow = isActive ? (portfolioSortState.direction === 'asc' ? ' ↑' : ' ↓') : '';
+        th.textContent = `${labels[key] || key}${arrow}`;
+    });
+}
 
 // --- 2. 核心計算邏輯 (保持不變) ---
 function calcStats() {
@@ -469,9 +529,15 @@ function renderDivSettings() {
             p.divDates = new Array(mArr.length).fill(15);
         }
 
+        // 3. 【新增】初始化除息前收盤價陣列 (若長度不符則預設補 0)
+        if (!p.divClosePrice || !Array.isArray(p.divClosePrice) || p.divClosePrice.length !== mArr.length) {
+            p.divClosePrice = new Array(mArr.length).fill(0);
+        }
+
         const inputs = mArr.map((m, dIdx) => {
             const val = p.divs[dIdx] || 0;       // 配息金額
             const dateVal = p.divDates[dIdx] || 15; // 除息日
+            const closePriceVal = p.divClosePrice[dIdx] || 0; // 除息前收盤價
 
             const curPay = Math.round(val * p.shares);
             const estPay = Math.round(val * (p.shares + (p.estShares || 0)));
@@ -500,6 +566,14 @@ function renderDivSettings() {
                                onchange="updateDivDate(${pIdx}, ${dIdx}, this.value)">
                         <span class="absolute left-2 top-1.5 text-xs text-gray-400">D</span>
                     </div>
+                </div>
+
+                <!-- 【新增】除息前收盤價輸入 -->
+                <div class="mb-3">
+                    <label class="text-[10px] text-slate-400 block mb-0.5">除息前收盤價($)</label>
+                    <input type="number" value="${closePriceVal}" step="0.01"
+                           class="w-full border border-amber-200 rounded px-2 py-1 text-sm font-mono text-amber-700 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white" 
+                           onchange="updateDivClosePrice(${pIdx}, ${dIdx}, this.value)">
                 </div>
 
                 <!-- 統計資訊 -->
@@ -549,15 +623,40 @@ function updateDivDate(pIdx, dIdx, val) {
     // 如果覺得輸入會跳掉 focus，可以只呼叫 saveData，但在切換頁面時資料要是新的
     renderAll(); 
 }
+// 更新除息前收盤價
+function updateDivClosePrice(pIdx, dIdx, val) {
+    if (!appData.portfolio[pIdx].divClosePrice) {
+        appData.portfolio[pIdx].divClosePrice = [];
+    }
+
+    const closePrice = Number(val);
+    appData.portfolio[pIdx].divClosePrice[dIdx] = isNaN(closePrice) ? 0 : closePrice;
+
+    saveData();
+    renderAll();
+}
 // ======================== 投資組告清單 ====================
 function renderPortfolio() {
     const b = document.getElementById('table-portfolio-body');
     if(!b) return;
     
+    const sortedList = [...appData.portfolio].sort((a, b) => {
+        const av = getPortfolioSortValue(a, portfolioSortState.key);
+        const bv = getPortfolioSortValue(b, portfolioSortState.key);
+
+        if (typeof av === 'string' && typeof bv === 'string') {
+            const result = av.localeCompare(bv, 'zh-Hant');
+            return portfolioSortState.direction === 'asc' ? result : -result;
+        }
+
+        const diff = Number(av) - Number(bv);
+        return portfolioSortState.direction === 'asc' ? diff : -diff;
+    });
+
     let totalCost = 0;
     let totalMV = 0;
 
-    b.innerHTML = appData.portfolio.map(p => {
+    b.innerHTML = sortedList.map(p => {
         const mv = p.shares * p.price;
         const pf = mv - p.cost;
         
@@ -592,6 +691,8 @@ function renderPortfolio() {
     pfEl.innerText = fmt(totalPf);
     pfEl.className = `p-4 text-right ${totalPf>=0?'text-red-500':'text-green-500'}`;
 
+    bindPortfolioSortHandlers();
+    updatePortfolioSortIndicators();
 }
 // ======================== 投資組合再平衡建議 ====================
 // ==============================
@@ -1781,7 +1882,13 @@ function renderManagement() {
 
         // 現價顏色
         const priceColorClass = isBuyZone ? 'text-red-600 font-bold' : 'text-slate-700';
-
+        // <!-- 7. 【新增】成本殖利率 (YoC) -->
+        // <!-- 使用唯讀欄位顯示，並加上不同顏色背景強調 -->
+        // <td class="p-2 w-24 align-middle bg-indigo-50/30">
+        //     <div class="flex items-center justify-end px-2 py-1.5 border border-indigo-100 rounded bg-indigo-50">
+        //         <span class="text-indigo-700 font-bold font-mono text-sm">${yoc.toFixed(2)}%</span>
+        //     </div>
+        // </td>
         return `<tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
             <!-- 1. 代號 -->
             <td class="p-3 font-bold text-blue-600 align-middle w-20 text-center">${p.code}</td>
@@ -1816,13 +1923,7 @@ function renderManagement() {
                        class="w-full bg-slate-100 border border-slate-200 rounded px-2 py-1.5 text-right text-slate-600 font-bold text-sm font-mono cursor-default">
             </td>
 
-            <!-- 7. 【新增】成本殖利率 (YoC) -->
-            <!-- 使用唯讀欄位顯示，並加上不同顏色背景強調 -->
-            <td class="p-2 w-24 align-middle bg-indigo-50/30">
-                <div class="flex items-center justify-end px-2 py-1.5 border border-indigo-100 rounded bg-indigo-50">
-                    <span class="text-indigo-700 font-bold font-mono text-sm">${yoc.toFixed(2)}%</span>
-                </div>
-            </td>
+
 
             <!-- 8. 目標買入價 -->
             <td class="p-2 w-28 align-middle bg-yellow-50/50 relative">
@@ -2021,7 +2122,7 @@ function reloadDataFromFile() {
 const API_CONFIG = {
     // 統一使用您的 Worker 網址
     all: 'https://woker-stock-all.hebeplkj.workers.dev/',
-    last: 'https://querydividend.hebeplkj.workers.dev/api/new',
+    last: 'https://querydividend.hebeplkj.workers.dev/api/new', //最新配息資料
     stock: 'https://querydividend.hebeplkj.workers.dev/api/stock'
 };
 
@@ -2345,10 +2446,29 @@ async function fetchTwseDivdendData() {
 			allData = rawData.data;
 		}
 
+        // ADD 增加計算YoC
+        allData = allData.map(p => ({
+            ...p,
+            YoC: getCurrentYield(
+                Number(p.CashDividend || 0),
+                Number(p.ClosingPrice || 0)
+            ).toFixed(2)
+        }));
+
+        // 4. 自動將查詢結果同步回股利政策設定
+        const updatedStockCount = syncDividendPolicyFromTwseResult(allData);
+
+        if (updatedStockCount > 0) {
+            msgDiv.innerHTML = `<div class="bg-green-50 text-green-700 p-3 rounded text-sm border border-green-200">已同步更新 ${updatedStockCount} 筆股票到股利政策詳細設定。</div>`;
+        } else {
+            msgDiv.innerHTML = '<div class="bg-blue-50 text-blue-600 p-3 rounded text-sm border border-blue-200">查詢成功，但未找到可同步的持股資料。</div>';
+        }
+
+        currentDividendData = allData;
+        currentDividendApiType = apiType;
 
         // 3. 顯示結果
         displayTwseDivdendResults(allData, apiType);
-
 
     } catch (err) {
         msgDiv.innerHTML = `<div class="bg-red-50 text-red-600 p-3 rounded text-sm border border-red-200">查詢失敗：${err.message}</div>`;
@@ -2358,6 +2478,105 @@ async function fetchTwseDivdendData() {
         btn.disabled = false; 
         btn.classList.remove('opacity-50');
     }
+}
+
+function getDividendSortValue(item, key) {
+    switch (key) {
+        case 'Date': return String(item.Date || '');
+        case 'Code': return String(item.Code || '');
+        case 'Name': return String(item.n || item.Name || item.name || '');
+        case 'CashDividend': return Number(item.CashDividend || 0);
+        case 'StockDividendRatio': return Number(item.StockDividendRatio || 0);
+        case 'ClosingPrice': return Number(item.ClosingPrice || 0);
+        case 'YoC': return Number(item.YoC || 0);
+        case 'UpdateTime': return new Date(item.UpdateTime || 0).getTime();
+        case 'PriceDate': return String(item.PriceDate || '');
+        default: return 0;
+    }
+}
+
+function sortDividendTable(key) {
+    if (dividendSortState.key === key) {
+        dividendSortState.direction = dividendSortState.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        dividendSortState.key = key;
+        dividendSortState.direction = ['Date', 'Code', 'Name', 'PriceDate'].includes(key) ? 'asc' : 'desc';
+    }
+
+    const rows = [...currentDividendData].sort((a, b) => {
+        const av = getDividendSortValue(a, dividendSortState.key);
+        const bv = getDividendSortValue(b, dividendSortState.key);
+
+        if (typeof av === 'string' && typeof bv === 'string') {
+            const result = av.localeCompare(bv, 'zh-Hant');
+            return dividendSortState.direction === 'asc' ? result : -result;
+        }
+
+        const diff = Number(av) - Number(bv);
+        return dividendSortState.direction === 'asc' ? diff : -diff;
+    });
+
+    displayTwseDivdendResults(rows, currentDividendApiType);
+}
+
+// 更新配息政策
+function syncDividendPolicyFromTwseResult(results) {
+    if (!Array.isArray(results) || !Array.isArray(appData?.portfolio)) return 0;
+
+    let updatedCount = 0;
+
+    results.forEach(item => {
+        const stockCode = String(item.Code || '').trim();
+        const targetStock = appData.portfolio.find(p => String(p.code) === stockCode);
+        if (!targetStock) return;
+
+        const dateStr = String(item.Date || '').trim();
+        const dateDigits = dateStr.replace(/\D/g, '');
+        if (!dateDigits || dateDigits.length < 4) return;
+
+        const month = Number(dateDigits.slice(-4, -2));
+        const day = Number(dateDigits.slice(-2));
+        if (!Number.isInteger(month) || !Number.isInteger(day) || month < 1 || month > 12 || day < 1 || day > 31) {
+            return;
+        }
+
+        let months = [];
+        if (typeof targetStock.months === 'string') {
+            months = targetStock.months.split(',').map(m => parseInt(m.trim(), 10)).filter(m => Number.isInteger(m));
+        }
+        if (!months.includes(month)) {
+            months.push(month);
+            months.sort((a, b) => a - b);
+            targetStock.months = months.join(',');
+        }
+
+        const mIdx = months.indexOf(month);
+        if (!Array.isArray(targetStock.divs)) targetStock.divs = [];
+        if (!Array.isArray(targetStock.divDates)) targetStock.divDates = [];
+        if (!Array.isArray(targetStock.divClosePrice)) targetStock.divClosePrice = [];
+
+        while (targetStock.divs.length < months.length) targetStock.divs.push(0);
+        while (targetStock.divDates.length < months.length) targetStock.divDates.push(15);
+        while (targetStock.divClosePrice.length < months.length) targetStock.divClosePrice.push(0);
+
+        const cashDividend = Number(item.CashDividend ?? 0);
+        const closePrice = Number(item.ClosingPrice ?? item.ClosePrice ?? 0);
+
+        const hadChanged =
+            (cashDividend > 0 && Number(targetStock.divs[mIdx] || 0) !== cashDividend) ||
+            (closePrice > 0 && Number(targetStock.divClosePrice[mIdx] || 0) !== closePrice) ||
+            Number(targetStock.divDates[mIdx] || 15) !== day;
+
+        if (cashDividend > 0) targetStock.divs[mIdx] = cashDividend;
+        if (closePrice > 0) targetStock.divClosePrice[mIdx] = closePrice;
+        targetStock.divDates[mIdx] = day;
+        targetStock.div = (targetStock.divs || []).reduce((sum, value) => sum + Number(value || 0), 0);
+
+        if (hadChanged) updatedCount++;
+    });
+
+    saveData();
+    return updatedCount;
 }
 
 function displayTwseDivdendResults(data, apiType) {
@@ -2373,23 +2592,43 @@ function displayTwseDivdendResults(data, apiType) {
     resultsDiv.classList.remove('hidden');
     statsDiv.classList.remove('hidden');
 
+    const label = (text, key) => {
+        const active = dividendSortState.key === key;
+        const arrow = active ? (dividendSortState.direction === 'asc' ? ' ↑' : ' ↓') : '';
+        return `${text}${arrow}`;
+    };
+
     let html = `
-        <div class="p-3 bg-gray-50 border-b text-sm text-gray-500 sticky left-0">
-            共找到 <b>${data.length}</b> 筆資料
+        <div class="flex justify-between items-center p-3 bg-gray-50 border-b sticky left-0">
+            <div class="text-sm text-gray-500">
+                共找到 <b id="totalCountDivdend">${data.length}</b> 筆資料
+            </div>
+
+            <div class="relative">
+                <input
+                    type="text"
+                    id="stockSearchDivdend"
+                    placeholder="搜尋股票代號或名稱..."
+                    class="w-64 pl-3 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                />
+            </div>
         </div>
         <table class="w-full text-left whitespace-nowrap border-collapse">
             <thead class="bg-teal-50 text-teal-800 text-sm font-bold">
                 <tr>
                     <!-- 關鍵修改：加入 sticky top-0 z-10 來凍結標題 -->
-                    <th class="p-3 sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">除息日</th>
-                    <th class="p-3 sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">股票代號</th>
-                    <th class="p-3 sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">名稱</th>
-                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">現金股利</th>
-                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">股票股利</th>
-                    <th class="p-3 sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">更新時間</th>
+                    <th class="p-3 sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm cursor-pointer select-none" onclick="sortDividendTable('Date')">${label('除息日', 'Date')}</th>
+                    <th class="p-3 sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm cursor-pointer select-none" onclick="sortDividendTable('Code')">${label('股票代號', 'Code')}</th>
+                    <th class="p-3 sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm cursor-pointer select-none" onclick="sortDividendTable('Name')">${label('名稱', 'Name')}</th>
+                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm cursor-pointer select-none" onclick="sortDividendTable('CashDividend')">${label('現金股利', 'CashDividend')}</th>
+                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm cursor-pointer select-none" onclick="sortDividendTable('StockDividendRatio')">${label('股票股利', 'StockDividendRatio')}</th>
+                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm cursor-pointer select-none" onclick="sortDividendTable('ClosingPrice')">${label('最新收盤價', 'ClosingPrice')}</th>
+                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm cursor-pointer select-none" onclick="sortDividendTable('YoC')">${label('現金殖利率', 'YoC')}</th>
+                    <th class="p-3 sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm cursor-pointer select-none" onclick="sortDividendTable('UpdateTime')">${label('股利更新時間', 'UpdateTime')}</th>
+                    <th class="p-3 sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm cursor-pointer select-none" onclick="sortDividendTable('PriceDate')">${label('收盤更新時間', 'PriceDate')}</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100 text-sm">`;
+            <tbody id="dividendTableBody" class="divide-y divide-gray-100 text-sm">`;
 
     let totalVol = 0;
     data.forEach(item => {
@@ -2406,8 +2645,14 @@ function displayTwseDivdendResults(data, apiType) {
         const stockDivid = parseFloat(item.StockDividendRatio || '0' );
         const CashDivid = parseFloat(item.CashDividend || '0');
 
+        // 收盤價更新日期、收盤價、Yoc
+        const closePrice = parseFloat(item.ClosingPrice || '0' );
+		const priceTime = item.PriceDate ||  '-';
+        const yoc = item.YoC || '0';
+
+
         html += `
-            <tr class="hover:bg-gray-50 transition-colors">
+            <tr class="hover:bg-gray-50 transition-colors" data-code="${code}" data-name="${name}">
                 <td class="p-3 font-bold text-slate-700">
                     ${exDate}
                 </td>
@@ -2415,7 +2660,10 @@ function displayTwseDivdendResults(data, apiType) {
                 <td class="p-3 font-bold">${name}</td>
                 <td class="p-3 text-right ">${CashDivid}</td>
                 <td class="p-3 text-right ">${stockDivid}</td>
+                <td class="p-3 text-right ">${closePrice}</td>
+                <td class="p-3 text-right ">${yoc}%</td>
                 <td class="p-3 text-slate-500">${logTime}</td>
+                <td class="p-3 text-slate-500">${priceTime}</td>
             </tr>`;
             
     });
@@ -2511,6 +2759,40 @@ function switchTabMobile(tabName) {
     }
 }
 
+// 除權息頁事件綁定
+function filterDividendTable(keyword) {
+
+    keyword = keyword.toLowerCase();
+
+    const rows = document.querySelectorAll(
+        '#dividendTableBody tr'
+    );
+
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+
+        const code =
+            row.dataset.code?.toLowerCase() || '';
+
+        const name =
+            row.dataset.name?.toLowerCase() || '';
+
+        const match =
+            code.includes(keyword) ||
+            name.includes(keyword);
+
+        row.style.display =
+            match ? '' : 'none';
+
+        if (match) visibleCount++;
+    });
+
+    document.getElementById(
+        'totalCountDivdend'
+    ).textContent = visibleCount;
+}
+
 // 3. (選用) 點擊畫面其他地方時關閉選單
 window.addEventListener('click', function(e) {
     const menu = document.getElementById('mobile-menu-dropdown');
@@ -2530,6 +2812,16 @@ window.addEventListener('DOMContentLoaded', () => {
     
     const qDate = document.getElementById('queryDate');
     if(qDate) qDate.valueAsDate = new Date();
+
+    // 動態html物件的事件綁定
+    document.addEventListener('input', (e) => {
+
+        if (e.target.id === 'stockSearchDivdend') {
+            filterDividendTable(e.target.value);
+        }
+
+    });
+
 
     switchTab('dashboard'); 
 });
