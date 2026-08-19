@@ -100,6 +100,7 @@ function importDataFunc(inputElement) {
 var appData = loadData();
 var charts = { pie: null, bar: null, detailBar: null };
 const fmt = (n) => new Intl.NumberFormat('zh-TW', { style: 'currency', currency: 'TWD', maximumFractionDigits: 0 }).format(n);
+// 排序表格
 const portfolioSortState = { key: 'mv', direction: 'desc' };
 const dividendSortState = { key: 'Date', direction: 'desc' };
 let currentDividendData = [];
@@ -511,8 +512,12 @@ function renderDivSettings() {
     const c = document.getElementById('div-settings-container');
     if (!c) return;
 
+    console.log('appData.portfolio' , appData.portfolio)
     c.innerHTML = appData.portfolio.map((p, pIdx) => {
         let mArr = [];
+        // 取得現價
+        let lastClosePrice = p.price;
+
         // 解析月份字串
         if (p.months && typeof p.months === 'string') {
             mArr = p.months.split(',').map(m => parseInt(m.trim())).filter(n => !isNaN(n));
@@ -533,6 +538,8 @@ function renderDivSettings() {
         if (!p.divClosePrice || !Array.isArray(p.divClosePrice) || p.divClosePrice.length !== mArr.length) {
             p.divClosePrice = new Array(mArr.length).fill(0);
         }
+        // 4. 現價配息率
+        const yoc = getCurrentYield(Number(p.div),lastClosePrice) ;
 
         const inputs = mArr.map((m, dIdx) => {
             const val = p.divs[dIdx] || 0;       // 配息金額
@@ -592,9 +599,22 @@ function renderDivSettings() {
                     <h3 class="font-bold text-lg text-slate-800">${p.name}</h3>
                     <span class="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">${p.saveBank}</span>
                 </div>
-                <div class="text-right">
-                    <div class="text-xs text-slate-500 mb-0.5">年度總配息</div>
-                    <div class="font-bold text-green-600 text-xl">${Number(p.div).toFixed(2)} <span class="text-xs text-gray-400">/股</span></div>
+                <div class="flex justify-end gap-8">
+                    <div class="text-right">
+                        <div class="text-xs text-slate-500">年度總配息</div>
+                        <div class="font-bold text-green-600 text-xl">
+                            ${Number(p.div).toFixed(2)}
+                            <span class="text-xs text-gray-400">/股</span>
+                        </div>
+                    </div>
+
+                    <div class="text-right">
+                        <div class="text-xs text-slate-500">現價配息率</div>
+                        <div class="font-bold text-green-600 text-xl">
+                            ${ yoc === 0 ? '-' : yoc.toFixed(2)}
+                            <span class="text-xs text-gray-400">%</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
@@ -668,7 +688,7 @@ function renderPortfolio() {
         const diff = yoc - cy;
 
         return `<tr class="hover:bg-blue-50"><td class="p-4 font-bold text-blue-600">${p.code}</td><td class="p-4">${p.name}</td><td class="p-4 text-right">${Number(p.shares).toLocaleString()}</td><td class="p-4 text-right text-orange-600">+${Number(p.estShares||0).toLocaleString()}</td><td class="p-4 text-right">${fmt(p.cost)}</td><td class="p-4 text-right">${p.price}</td><td class="p-4 text-right font-bold">${fmt(mv)}</td><td class="p-4 text-right font-bold ${pf>=0?'text-red-500':'text-green-500'}">${fmt(pf)}</td>
-    <!-- ✅ 成本殖利率 -->
+    <!-- ✅ 成本殖利率:投入的本金，目前每年替你創造多少現金流 -->
     <td class="p-4 text-right font-bold text-purple-600">
         ${yoc.toFixed(2)}%
     </td>
@@ -1083,7 +1103,7 @@ function renderRebalancePanel() {
   }
 }
 
-// ======================== 投資組合再平衡建議 ====================
+// ======================== 投資組合再平衡建議 END ====================
 
 // ======================== 配息分析 =============================
 function renderAnalysis() {
@@ -1186,7 +1206,7 @@ function renderAnalysis() {
         </div>`;
     }).join('');
 }
-// ======================== 配息分析 =============================
+// ======================== 配息分析 END =============================
 
 function renderTransactions() {
     // 1. 處理下拉選單
@@ -1660,7 +1680,7 @@ function confirmShortSell() {
   // ✅ 立即重算畫面
   renderShortTerm();
 }
-// ==================== 短期策略相關邏輯 ====================
+// ==================== 短期策略相關邏輯 END ====================
 
 // 輔助函式：新增與更新
 function addShortTermItem() {
@@ -1813,7 +1833,7 @@ function getYoC(cost, shares, dividend){
 }
 
 // 現價殖利率（Current Yield）
-//殖利率 = 年股利 ÷ 當前股價
+// 現價殖利率 = 年股利 ÷ 當前股價
 function getCurrentYield(dividend, currentPrice){
     if(!currentPrice) return 0;
     return (dividend / currentPrice) * 100;
@@ -1963,7 +1983,7 @@ function renderManagement() {
             </td>
             
             <!-- 11. 股利 -->
-            <td class="p-2 w-24 align-middle">
+            <td class="p-2 w-24 align-middle" style="display:none;">
                 <input type="number" value="${Number(p.div).toFixed(2)}" disabled 
                        class="w-full bg-gray-100 border border-gray-200 rounded px-2 py-1.5 text-right text-gray-400 cursor-not-allowed text-sm font-mono"
                        title="請至「股利政策設定」頁面修改細項">
@@ -2107,7 +2127,7 @@ function deleteFundTx(idx) {
 }
 // ------------------
 
-// --- 新增功能：強制從 data.js 檔案重新載入 ---
+// --- 強制從 data.js 檔案重新載入 ---
 function reloadDataFromFile() {
     if (confirm("這將會捨棄目前尚未匯出的修改，並強制讀取 data.js 檔案內容。\n\n確定要重新載入嗎？")) {
         // 1. 清除瀏覽器記憶的舊資料
@@ -2495,6 +2515,7 @@ function getDividendSortValue(item, key) {
     }
 }
 
+// 排序除息表
 function sortDividendTable(key) {
     if (dividendSortState.key === key) {
         dividendSortState.direction = dividendSortState.direction === 'asc' ? 'desc' : 'asc';
@@ -2657,7 +2678,16 @@ function displayTwseDivdendResults(data, apiType) {
                     ${exDate}
                 </td>
                 <td class="p-3 font-medium">${code}</td>
-                <td class="p-3 font-bold">${name}</td>
+                <td class="p-3 font-bold"><a
+                    href="https://tw.stock.yahoo.com/quote/${code}.TW"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="${name}"
+                    style="text-decoration: underline; color: #000000;"
+                    >
+                    ${name}
+                    </a>
+                </td>
                 <td class="p-3 text-right ">${CashDivid}</td>
                 <td class="p-3 text-right ">${stockDivid}</td>
                 <td class="p-3 text-right ">${closePrice}</td>
@@ -2758,6 +2788,7 @@ function switchTabMobile(tabName) {
         menu.classList.add('hidden');
     }
 }
+// ------------------------------------
 
 // 除權息頁事件綁定
 function filterDividendTable(keyword) {
@@ -2793,7 +2824,7 @@ function filterDividendTable(keyword) {
     ).textContent = visibleCount;
 }
 
-// 3. (選用) 點擊畫面其他地方時關閉選單
+// 點擊畫面其他地方時關閉選單
 window.addEventListener('click', function(e) {
     const menu = document.getElementById('mobile-menu-dropdown');
     const btn = document.querySelector('button[onclick="toggleMobileMenu()"]'); // 抓取觸發按鈕
