@@ -52,7 +52,7 @@ const DEFAULT_DATA = {
             "divClosePrice": [
                 0,
                 0,
-                0,
+                33.75,
                 0
             ],
             "saveBank": "台新",
