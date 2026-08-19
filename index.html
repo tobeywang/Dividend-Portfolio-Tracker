@@ -225,7 +225,24 @@
         <!-- 2. Portfolio -->
         <div id="view-portfolio" class="page-view hidden fade-in">
             <!-- (保持原本內容) -->
-            <h2 class="text-2xl font-bold mb-6">投資組合清單</h2><div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto"><table class="w-full text-left whitespace-nowrap"><thead class="bg-slate-50 text-slate-600 text-sm font-bold border-b border-slate-200"><tr><th class="p-4 cursor-pointer select-none" data-sort-key="code">代號</th><th class="p-4 cursor-pointer select-none" data-sort-key="name">名稱</th><th class="p-4 text-right cursor-pointer select-none" data-sort-key="shares">持有股數</th><th class="p-4 text-right cursor-pointer select-none" data-sort-key="estShares">預估</th><th class="p-4 text-right cursor-pointer select-none" data-sort-key="cost">總成本</th><th class="p-4 text-right cursor-pointer select-none" data-sort-key="price">現價</th><th class="p-4 text-right cursor-pointer select-none" data-sort-key="mv">市值</th><th class="p-4 text-right cursor-pointer select-none" data-sort-key="pf">損益</th><th class="p-4 text-right cursor-pointer select-none" data-sort-key="yoc">YoC</th><th class="p-4 text-right cursor-pointer select-none" data-sort-key="cy">現價殖利率(CY)</th></tr></thead><tbody id="table-portfolio-body" class="divide-y divide-slate-100 text-sm"></tbody>
+            <h2 class="text-2xl font-bold mb-6">投資組合清單</h2><div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+            <table class="w-full text-left whitespace-nowrap">
+                <thead class="bg-slate-50 text-slate-600 text-sm font-bold border-b border-slate-200">
+                    <tr>
+                        <!-- 欄位名稱在：updatePortfolioSortIndicators -->
+                        <th class="p-4 cursor-pointer select-none" data-sort-key="code"></th>
+                        <th class="p-4 cursor-pointer select-none" data-sort-key="name"></th>
+                        <th class="p-4 text-right cursor-pointer select-none" data-sort-key="shares"></th>
+                        <th class="p-4 text-right cursor-pointer select-none" data-sort-key="estShares"></th>
+                        <th class="p-4 text-right cursor-pointer select-none" data-sort-key="cost"></th>
+                        <th class="p-4 text-right cursor-pointer select-none" data-sort-key="price"></th>
+                        <th class="p-4 text-right cursor-pointer select-none" data-sort-key="mv"></th>
+                        <th class="p-4 text-right cursor-pointer select-none" data-sort-key="pf"></th>
+                        <th class="p-4 text-right cursor-pointer select-none" data-sort-key="yoc"></th>
+                        <th class="p-4 text-right cursor-pointer select-none" data-sort-key="cy"></th>
+                    </tr>
+                </thead>
+                <tbody id="table-portfolio-body" class="divide-y divide-slate-100 text-sm"></tbody>
             <tfoot class="bg-slate-50 border-t border-slate-200 font-bold text-slate-700">
             <tr>
             <td colspan="4" class="p-4 text-right">合計：</td>
@@ -697,7 +714,7 @@
                         <th class="p-3 border-b border-gray-200 bg-yellow-50 text-yellow-800">目標買入價<br>預估股利 / 期待殖利率</th>
                         <th class="p-3 border-b border-gray-200">建議買價</th>
                         <th class="p-3 border-b border-gray-200">現價</th>
-                        <th class="p-3 border-b border-gray-200">年股利</th>
+                        <!-- <th class="p-3 border-b border-gray-200">年股利</th> -->
                         <th class="p-3 border-b border-gray-200">配息月</th>
                     </tr>
                 </thead>
