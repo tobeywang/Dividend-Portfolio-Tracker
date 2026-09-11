@@ -401,6 +401,7 @@ const DEFAULT_DATA = {
             "total": 10000
         }
     ],
+    "fundNewNav": "66.98",
     "shortTermTargetDate": "2026-05-31",
     "shortTerm": [
         {
