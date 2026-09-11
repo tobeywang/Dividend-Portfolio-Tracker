@@ -13,7 +13,7 @@ const DEFAULT_DATA = {
                 1,
                 0.6
             ],
-            "price": 107.9,
+            "price": 109.15,
             "months": "1,7",
             "divDates": [
                 22,
@@ -41,7 +41,7 @@ const DEFAULT_DATA = {
                 1.01,
                 0.4
             ],
-            "price": 34.11,
+            "price": 34.15,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -73,7 +73,7 @@ const DEFAULT_DATA = {
                 1.25,
                 0.78
             ],
-            "price": 63.45,
+            "price": 63.65,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -87,7 +87,7 @@ const DEFAULT_DATA = {
             "divClosePrice": [
                 0,
                 0,
-                63.1,
+                63.65,
                 0
             ]
         },
@@ -105,7 +105,7 @@ const DEFAULT_DATA = {
                 1.35,
                 0.866
             ],
-            "price": 55.4,
+            "price": 55.7,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -137,7 +137,7 @@ const DEFAULT_DATA = {
                 1.1,
                 0.54
             ],
-            "price": 33.02,
+            "price": 32.55,
             "months": "3,6,9,12",
             "divDates": [
                 18,
@@ -166,7 +166,7 @@ const DEFAULT_DATA = {
             "divs": [
                 3.5
             ],
-            "price": 115,
+            "price": 110.5,
             "months": "6",
             "divDates": [
                 30
@@ -410,7 +410,7 @@ const DEFAULT_DATA = {
             "date": "2026-04-29",
             "shares": 1000,
             "cost": 91.65,
-            "price": 107.9
+            "price": 109.15
         }
     ],
     "shortTerm_history": [
