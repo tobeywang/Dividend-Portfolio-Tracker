@@ -167,6 +167,7 @@ function calcStats() {
     let tP21 = 0; let tP20 = 0; let tDiv = 0, tDivEst = 0; 
     let mDist = Array(12).fill(0); let mDistEst = Array(12).fill(0); 
     let chartDataSets = [];
+    let portfolioMarketValue = 0;
 
     // 1. P21: 交易紀錄
     // 計算股票交易總額 (假設原本邏輯如下)
@@ -193,6 +194,7 @@ function calcStats() {
     appData.portfolio.forEach(p => {
         let estS = Number(p.estShares || 0);
         let curS = Number(p.shares);
+        portfolioMarketValue += curS * Number(p.price);
         tP20 += estS * Number(p.price);
 
         let mArr = [];
@@ -226,9 +228,21 @@ function calcStats() {
         }
     });
 
+    // 3. 計算資產總市值 = 股票持有市值 + 基金目前市值
+    let fundUnits = 0;
+    if (appData.fundTransactions) {
+        appData.fundTransactions.forEach(ft => {
+            const units = Number(ft.units || 0);
+            if (ft.type === 'Buy') fundUnits += units;
+            else if (ft.type === 'Sell') fundUnits -= units;
+        });
+    }
+    const fundMarketValue = fundUnits * Number(appData.fundNewNav || 0);
+    const assetValue = portfolioMarketValue + fundMarketValue;
+
     let tP22 = tP21 + tP20; 
     let rem = appData.budget - tP22; 
-    return { tP21, tP20, tP22, rem, tDiv, tDivTotal: tDiv + tDivEst, tDivEst, yield: tP22 ? ((tDiv+tDivEst)/tP22)*100 : 0, mDist, mDistEst, chartDataSets };
+    return { tP21, tP20, tP22, rem, tDiv, tDivTotal: tDiv + tDivEst, tDivEst, yield: tP22 ? ((tDiv+tDivEst)/tP22)*100 : 0, mDist, mDistEst, chartDataSets, portfolioMarketValue, fundMarketValue, assetValue };
 }
 
 // --- 3. 互動功能 (保持不變) ---
@@ -277,6 +291,8 @@ function renderDashboard() {
     document.getElementById('dash-dividend-cur').innerText = fmt(s.tDiv);
     document.getElementById('dash-dividend-add').innerText = `+${fmt(s.tDivEst)}`;
     document.getElementById('dash-yield').innerText = `總殖利率 ${s.yield.toFixed(2)}%`;
+    
+    document.getElementById('dash-value').innerText = fmt(s.assetValue);
 
     if(typeof Chart !== 'undefined'){
         const ctxP = document.getElementById('chart-pie');
@@ -2060,10 +2076,14 @@ function renderFundTransactions() {
     const tfootAmount = document.getElementById('fund-total-amount');
     const tfootUnits = document.getElementById('fund-total-units'); // ★ 新增
     const tfootAvgCost = document.getElementById('fund-avg-cost');  // ★ 新增
+    const tfootNewNav = document.getElementById('fund-nav');  // ★ 新增
+    const tfootNet = document.getElementById('fund-net');  // ★ 新增
+    const tfootRoi = document.getElementById('fund-roi');  // ★ 新增
 
     if (!tbody) return;
 
     if (!appData.fundTransactions) appData.fundTransactions = [];
+    if (!appData.fundNewNav) appData.fundNewNav = 0.00;
 
     let netFundInvested = 0;
     let totalUnits = 0; // ★ 新增：累計單位數
@@ -2111,10 +2131,18 @@ function renderFundTransactions() {
     if (totalUnits > 0) {
         avgCost = netFundInvested / totalUnits;
     }
+    // ★ 計算平均單位成本 (淨投入 / 總單位數)
+    let net = 0;
+    if (totalUnits > 0) {
+        net = (appData.fundNewNav * totalUnits) - netFundInvested ;
+    }
     // ★ 更新底部統計數據
     if (tfootAmount) tfootAmount.innerText = fmt(netFundInvested);
     if (tfootUnits) tfootUnits.innerText = totalUnits.toFixed(2); // 單位數通常取小數點後2位
     if (tfootAvgCost) tfootAvgCost.innerText = avgCost > 0 ? avgCost.toFixed(4) : '0.0000'; // 淨值/成本通常取小數點後4位
+    if (tfootNewNav) tfootNewNav.innerText = appData.fundNewNav ; // TODO:近一次的淨值(手動查)
+    if (tfootNet) tfootNet.innerText = fmt(net.toFixed(0)) ; 
+    if (tfootRoi) tfootRoi.innerText = net >0 ? (net / netFundInvested * 100).toFixed(2)  +'%' :'0.00 %'  ; 
 
 }
 
