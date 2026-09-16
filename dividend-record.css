@@ -265,7 +265,7 @@ tbody td {
 .badge-hk  { background: #fef9e7; color: #d68910; }
 .badge-other { background: #f0f0f0; color: #555; }
 
-.amount-positive { color: #27ae60; font-weight: bold; }
+.amount-positive { color: #27ae60; font-weight: bold; text-align: right; }
 
 /* ===== 空狀態 ===== */
 .empty-state {
