@@ -5,15 +5,15 @@ const DEFAULT_DATA = {
             "id": 1,
             "code": "0050",
             "name": "元大台灣50(國泰證+中信證)",
-            "cost": 480245,
-            "shares": 9529,
+            "cost": 489894,
+            "shares": 9630,
             "estShares": 0,
             "div": 1.6,
             "divs": [
                 1,
                 0.6
             ],
-            "price": 109.15,
+            "price": 106.9,
             "months": "1,7",
             "divDates": [
                 22,
@@ -41,7 +41,7 @@ const DEFAULT_DATA = {
                 1.01,
                 0.4
             ],
-            "price": 34.15,
+            "price": 34.23,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -73,7 +73,7 @@ const DEFAULT_DATA = {
                 1.25,
                 0.78
             ],
-            "price": 63.65,
+            "price": 64.35,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -87,7 +87,7 @@ const DEFAULT_DATA = {
             "divClosePrice": [
                 0,
                 0,
-                63.65,
+                64.25,
                 0
             ]
         },
@@ -105,7 +105,7 @@ const DEFAULT_DATA = {
                 1.35,
                 0.866
             ],
-            "price": 55.7,
+            "price": 55.4,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -129,7 +129,7 @@ const DEFAULT_DATA = {
             "name": "群益台灣精選",
             "cost": 179257,
             "shares": 7200,
-            "estShares": 0,
+            "estShares": 200,
             "div": 3.42,
             "divs": [
                 0.78,
@@ -137,7 +137,7 @@ const DEFAULT_DATA = {
                 1.1,
                 0.54
             ],
-            "price": 32.55,
+            "price": 32.89,
             "months": "3,6,9,12",
             "divDates": [
                 18,
@@ -166,7 +166,7 @@ const DEFAULT_DATA = {
             "divs": [
                 3.5
             ],
-            "price": 110.5,
+            "price": 112.5,
             "months": "6",
             "divDates": [
                 30
@@ -410,7 +410,7 @@ const DEFAULT_DATA = {
             "date": "2026-04-29",
             "shares": 1000,
             "cost": 91.65,
-            "price": 109.15
+            "price": 106.9
         }
     ],
     "shortTerm_history": [
