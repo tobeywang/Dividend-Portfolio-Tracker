@@ -100,6 +100,11 @@
                     <i class="ri-money-dollar-box-line text-lg"></i> 證交所除息
                 </button>
 
+                <!-- 實際股息列表 -->
+                <button onclick="goto('dividend-record.html')" id="nav-twse-div" class="nav-item w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-left text-sm text-slate-600 hover:text-teal-700 hover:bg-teal-50">
+                    <i class="ri-refund-2-fill text-lg"></i> 實際現金配息
+                </button>
+
                 <!-- 子功能區塊 (內縮) -->
                 <!-- <div class="pl-4 mt-1 space-y-1 border-l-2 border-slate-100 ml-4">
                     <button onclick="switchTab('div-settings')" id="nav-div-settings" class="nav-item w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-left text-sm text-slate-600 hover:text-purple-700 hover:bg-purple-50">
@@ -200,6 +205,11 @@
                 <button onclick="switchTabMobile('twse-div')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-700 flex items-center gap-3 transition-colors">
                     <i class="ri-money-dollar-box-line text-lg text-slate-400"></i> 證交所除息
                 </button>
+
+                <!-- 選項 5: 實際股息列表 -->
+                <button onclick="goto('dividend-record.html')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-700 flex items-center gap-3 transition-colors">
+                    <i class="ri-money-dollar-box-line text-lg text-slate-400"></i> 實際現金配息
+                </button>
             </div>
         </div>
     </div>
@@ -232,7 +242,7 @@
                         </div>
 
                         <div class="text-xs text-slate-400 mt-1">
-                        來自交易記錄累計
+                        來自交易記錄(含基金)累計
                         </div>
                     </div>
 
@@ -261,7 +271,7 @@
                         </div>
 
                         <div
-                        class="text-lg font-bold text-green-600"
+                        class="text-lg font-bold text-red-600"
                         id="dash-value"
                         >
                         </div>
@@ -317,7 +327,7 @@
             <td class="p-4 text-right" id="total-pf">0</td>
 
             <!-- YoC 空 -->
-            <td class="p-4"></td>
+            <td class="p-4 text-right" id="total-rate">%</td>
 
             <!-- CY 空 -->
             <td class="p-4"></td>
@@ -470,7 +480,15 @@
                                 </td>
                                 <td class="p-3 text-right align-bottom">
                                     <div class="text-[10px] text-slate-400 font-normal mb-0.5">最近淨值</div>
-                                    <div class="text-black-600" id="fund-nav"></div>
+                                    <div class="flex items-center justify-end gap-1">
+                                        <input type="number" id="fund-nav" step="0.0001" min="0"
+                                            class="w-24 border border-gray-300 rounded px-2 py-1 text-right font-normal text-black-600 bg-white"
+                                            aria-label="最近淨值">
+                                        <button type="button" onclick="updateFundNewNav()"
+                                            class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-2 py-1 rounded">
+                                            更新
+                                        </button>
+                                    </div>
                                 </td>
                                 <td class="p-3 text-right align-bottom">
                                     <div class="text-[10px] text-slate-400 font-normal mb-0.5">未實現損益</div>
@@ -798,6 +816,7 @@
             <button onclick="switchTab('portfolio')" class="text-slate-500"><i class="ri-pie-chart-2-line text-xl"></i></button>
             <button onclick="switchTab('twse')" class="text-teal-600"><i class="ri-search-stock-line text-xl"></i></button> <!-- NEW -->
             <button onclick="switchTab('analysis')" class="text-slate-500"><i class="ri-bar-chart-grouped-line text-xl"></i></button>
+            <button onclick="switchTab('twse-div')" class="text-teal-600"><i class="ri-money-dollar-box-line text-xl"></i></button> <!-- NEW -->
         </div>
     </main>
     
