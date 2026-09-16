@@ -1,0 +1,172 @@
+const DEFAULT_DATA = { 
+    "realDividendList" :[
+        {
+            "id": "1789522908721-y8ttm6u2ois",
+            "stock": "00713 / 元大高息低波",
+            "date": "2026-09-21",
+            "bank": "台灣銀行",
+            "amount": 2500,
+            "currency": "TWD",
+            "perShare": "1.25",
+            "shares": "2000",
+            "taxStatus": "-",
+            "note": ""
+        },
+        {
+            "id": "1789522908721-y8aaadsafdis",
+            "stock": "00919 / 群益台灣精選",
+            "date": "2026-09-16",
+            "bank": "中信銀行",
+            "amount": 7920,
+            "currency": "TWD",
+            "perShare": "1.1",
+            "shares": "7200",
+            "taxStatus": "-",
+            "note": ""
+        },
+        {
+            "id": "1789522908721-adtm6u2ois",
+            "stock": "00878 / 國泰永續高股息",
+            "date": "2026-08-18",
+            "bank": "台新銀行",
+            "amount": 18180,
+            "currency": "TWD",
+            "perShare": "1.01",
+            "shares": "18000",
+            "taxStatus": "-",
+            "note": ""
+        },
+        {
+            "id": "1789522908721-qqm6u2ois",
+            "stock": "0050 / 元大台灣50",
+            "date": "2026-07-21",
+            "bank": "台灣銀行",
+            "amount": 5700,
+            "currency": "TWD",
+            "perShare": "0.6",
+            "shares": "9500",
+            "taxStatus": "-",
+            "note": ""
+        },
+        {
+            "id": "1789522908721-y8ttaaois",
+            "stock": "0056 / 元大高股息",
+            "date": "2026-07-21",
+            "bank": "中信銀行",
+            "amount": 10800,
+            "currency": "TWD",
+            "perShare": "1.35",
+            "shares": "8000",
+            "taxStatus": "-",
+            "note": ""
+        },
+        {
+            "id": "1789522908721-y8ttm6z12is",
+            "stock": "00713 / 元大高息低波",
+            "date": "2026-06-22",
+            "bank": "台灣銀行",
+            "amount": 2000,
+            "currency": "TWD",
+            "perShare": "1",
+            "shares": "2000",
+            "taxStatus": "-",
+            "note": ""
+        },
+        {
+            "id": "1789522908721-adtm1232ois",
+            "stock": "00878 / 國泰永續高股息",
+            "date": "2026-05-19",
+            "bank": "台新銀行",
+            "amount": 11880,
+            "currency": "TWD",
+            "perShare": "0.66",
+            "shares": "18000",
+            "taxStatus": "-",
+            "note": ""
+        },
+        {
+            "id": "1789522908721-y8t8is",
+            "stock": "0056 / 元大高股息",
+            "date": "2026-04-23",
+            "bank": "中信銀行",
+            "amount": 6000,
+            "currency": "TWD",
+            "perShare": "1",
+            "shares": "6000",
+            "taxStatus": "-",
+            "note": ""
+        },
+        {
+            "id": "1789522908721-111tm6z12is",
+            "stock": "00713 / 元大高息低波",
+            "date": "2026-03-20",
+            "bank": "台灣銀行",
+            "amount": 2000,
+            "currency": "TWD",
+            "perShare": "1",
+            "shares": "1560",
+            "taxStatus": "-",
+            "note": ""
+        },
+        {
+            "id": "1789522908721-y83242afdis",
+            "stock": "00919 / 群益台灣精選",
+            "date": "2026-03-17",
+            "bank": "中信銀行",
+            "amount": 3900,
+            "currency": "TWD",
+            "perShare": "0.78",
+            "shares": "5000",
+            "taxStatus": "-",
+            "note": ""
+        },
+        {
+            "id": "1789522908721-adtm56ois",
+            "stock": "00878 / 國泰永續高股息",
+            "date": "2026-02-26",
+            "bank": "台新銀行",
+            "amount": 7560,
+            "currency": "TWD",
+            "perShare": "0.42",
+            "shares": "18000",
+            "taxStatus": "-",
+            "note": ""
+        },
+        {
+            "id": "1789522908721-q123xxu2ois",
+            "stock": "0050 / 元大台灣50",
+            "date": "2026-01-22",
+            "bank": "台灣銀行",
+            "amount": 9000,
+            "currency": "TWD",
+            "perShare": "1",
+            "shares": "9000",
+            "taxStatus": "-",
+            "note": ""
+        },
+        {
+            "id": "1789522908721-y8t126asdfa",
+            "stock": "0056 / 元大高股息",
+            "date": "2026-01-22",
+            "bank": "中信銀行",
+            "amount": 5196,
+            "currency": "TWD",
+            "perShare": "0.866",
+            "shares": "6000",
+            "taxStatus": "-",
+            "note": ""
+        },
+        {
+            "id": "1789522908721-1aaaa1tm6z12is",
+            "stock": "00713 / 元大高息低波",
+            "date": "2025-11-18",
+            "bank": "台灣銀行",
+            "amount": 936,
+            "currency": "TWD",
+            "perShare": "0.78",
+            "shares": "1200",
+            "taxStatus": "-",
+            "note": ""
+        }
+    ]
+};
