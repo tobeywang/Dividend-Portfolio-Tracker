@@ -35,9 +35,6 @@ function exportDataFile() {
     document.body.removeChild(a); URL.revokeObjectURL(url);
     alert("已匯出 data.js！請覆蓋原始檔案。");
 }
-function resetData() {
-    if(confirm("確定重置？")) { localStorage.removeItem(STORAGE_KEY); location.reload(); }
-}
 /**
  * 處理檔案匯入的函式
  * @param {HTMLInputElement} inputElement 
@@ -528,7 +525,6 @@ function renderDivSettings() {
     const c = document.getElementById('div-settings-container');
     if (!c) return;
 
-    console.log('appData.portfolio' , appData.portfolio)
     c.innerHTML = appData.portfolio.map((p, pIdx) => {
         let mArr = [];
         // 取得現價
@@ -675,8 +671,39 @@ function updateDivClosePrice(pIdx, dIdx, val) {
 function renderPortfolio() {
     const b = document.getElementById('table-portfolio-body');
     if(!b) return;
+
+    const portfolioList = [...appData.portfolio];
+    const fundTransactions = Array.isArray(appData.fundTransactions) ? appData.fundTransactions : [];
+    if (fundTransactions.length > 0) {
+        const fundName = fundTransactions[0].name || '基金';
+        const fundCost = fundTransactions.reduce((total, transaction) => {
+            const value = Number(transaction.total || 0);
+            if (transaction.type === 'Buy') return total + value;
+            if (transaction.type === 'Sell' || transaction.type === 'Div') return total - value;
+            return total;
+        }, 0);
+        const fundUnits = fundTransactions.reduce((total, transaction) => {
+            const units = Number(transaction.units || 0);
+            if (transaction.type === 'Buy') return total + units;
+            if (transaction.type === 'Sell') return total - units;
+            return total;
+        }, 0);
+        // TODO:目前只會買同一筆基金，所以固定一個最新淨值
+        const fundPrice = Number(appData.fundNewNav || 0);
+
+        portfolioList.push({
+            code: '基金',
+            name: fundName,
+            shares: fundUnits,
+            estShares: 0,
+            cost: fundCost,
+            price: fundPrice,
+            div: 0,
+            isFund: true
+        });
+    }
     
-    const sortedList = [...appData.portfolio].sort((a, b) => {
+    const sortedList = portfolioList.sort((a, b) => {
         const av = getPortfolioSortValue(a, portfolioSortState.key);
         const bv = getPortfolioSortValue(b, portfolioSortState.key);
 
@@ -699,19 +726,19 @@ function renderPortfolio() {
         totalCost += p.cost;
         totalMV += mv;
         
-        const yoc = getYoC(p.cost, p.shares, p.div);
-        const cy = getCurrentYield(p.div, p.price);
+        const yoc = p.isFund ? null : getYoC(p.cost, p.shares, p.div);
+        const cy = p.isFund ? null : getCurrentYield(p.div, p.price);
         const diff = yoc - cy;
 
         return `<tr class="hover:bg-blue-50"><td class="p-4 font-bold text-blue-600">${p.code}</td><td class="p-4">${p.name}</td><td class="p-4 text-right">${Number(p.shares).toLocaleString()}</td><td class="p-4 text-right text-orange-600">+${Number(p.estShares||0).toLocaleString()}</td><td class="p-4 text-right">${fmt(p.cost)}</td><td class="p-4 text-right">${p.price}</td><td class="p-4 text-right font-bold">${fmt(mv)}</td><td class="p-4 text-right font-bold ${pf>=0?'text-red-500':'text-green-500'}">${fmt(pf)}</td>
     <!-- ✅ 成本殖利率:投入的本金，目前每年替你創造多少現金流 -->
     <td class="p-4 text-right font-bold text-purple-600">
-        ${yoc.toFixed(2)}%
+        ${p.isFund ? '-' : `${yoc.toFixed(2)}%`}
     </td>
 
     <!-- ✅ 現價殖利率 -->
     <td class="p-4 text-right font-bold text-green-600">
-        ${cy.toFixed(2)}%(${diff > 0 ? '+' : ''}${diff.toFixed(2)}%)
+        ${p.isFund ? '-' : `${cy.toFixed(2)}%(${diff > 0 ? '+' : ''}${diff.toFixed(2)}%)`}
     </td>
 </tr>`;
     }).join('');
@@ -726,6 +753,11 @@ function renderPortfolio() {
     const pfEl = document.getElementById('total-pf');
     pfEl.innerText = fmt(totalPf);
     pfEl.className = `p-4 text-right ${totalPf>=0?'text-red-500':'text-green-500'}`;
+
+    // ✅ 總報酬
+    const totalRate = document.getElementById('total-rate');
+    const totalR =  totalPf / totalCost * 100 ;
+    totalRate.innerText = totalR.toFixed(2) +'%'
 
     bindPortfolioSortHandlers();
     updatePortfolioSortIndicators();
@@ -1893,19 +1925,22 @@ function renderManagement() {
         // 公式：年股利 / 平均成本
         let yoc = getYoC(p.cost,p.shares, dividend);
 
-        // 推算合理價 (供目標價參考) 這裡是用合理股價 = 預估年股利 ÷ 期待殖利率
-        const priceYield6 = dividend > 0 ? (dividend / 0.06).toFixed(2) : 0;
-        const priceYield7 = dividend > 0 ? (dividend / 0.07).toFixed(2) : 0;
-
         // 取得自訂的期待殖利率 (若未設定，預設給 6%)
         const targetYield = p.targetYield || 6; 
         // 動態計算建議買價：年股利 / (期待殖利率 / 100)
-        const suggestedPrice = dividend > 0 ? (dividend / (targetYield / 100)).toFixed(2) : 0;
+        let suggestedPrice = dividend > 0 ? (dividend / (targetYield / 100)).toFixed(2) : 0;
 
         // 計算現價殖利率
         let currentYield = 0;
         if (currentPrice > 0) {
-            currentYield = getCurrentYield(dividend / currentPrice);
+            currentYield = getCurrentYield(dividend , currentPrice);
+
+            // 期望固定降0.2的幅度跟現價殖利率比較，取得最大，計算建議買價
+            const buyYield = Math.max(targetYield - 0.2, currentYield);
+
+            suggestedPrice =  dividend > 0 ? (dividend / (buyYield / 100)).toFixed(2) : 0;
+            // 現價與期望的gap
+            const yieldGap = targetYield - currentYield;
         }
 
         // 判定是否觸發買入訊號
@@ -2070,6 +2105,20 @@ function addFundTransaction() {
     document.getElementById('ft-amount').value = '';
     document.getElementById('ft-fee').value = '';
 }
+// 更新最新淨值
+function updateFundNewNav() {
+    const navInput = document.getElementById('fund-nav');
+    const newNav = Number(navInput?.value || 0);
+
+    if (!Number.isFinite(newNav) || newNav <= 0) {
+        alert('請輸入大於 0 的基金淨值');
+        return;
+    }
+
+    appData.fundNewNav = newNav;
+    saveData();
+    renderAll();
+}
 
 function renderFundTransactions() {
     const tbody = document.getElementById('table-fund-body');
@@ -2140,7 +2189,7 @@ function renderFundTransactions() {
     if (tfootAmount) tfootAmount.innerText = fmt(netFundInvested);
     if (tfootUnits) tfootUnits.innerText = totalUnits.toFixed(2); // 單位數通常取小數點後2位
     if (tfootAvgCost) tfootAvgCost.innerText = avgCost > 0 ? avgCost.toFixed(4) : '0.0000'; // 淨值/成本通常取小數點後4位
-    if (tfootNewNav) tfootNewNav.innerText = appData.fundNewNav ; // TODO:近一次的淨值(手動查)
+    if (tfootNewNav) tfootNewNav.value = Number(appData.fundNewNav || 0).toFixed(4);
     if (tfootNet) tfootNet.innerText = fmt(net.toFixed(0)) ; 
     if (tfootRoi) tfootRoi.innerText = net >0 ? (net / netFundInvested * 100).toFixed(2)  +'%' :'0.00 %'  ; 
 
@@ -2850,6 +2899,10 @@ function filterDividendTable(keyword) {
     document.getElementById(
         'totalCountDivdend'
     ).textContent = visibleCount;
+}
+
+function goto(pathName){
+    window.location.href = pathName;
 }
 
 // 點擊畫面其他地方時關閉選單
