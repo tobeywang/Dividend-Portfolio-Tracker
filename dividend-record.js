@@ -39,9 +39,9 @@ function escapeHtml(value) {
     .replace(/'/g, '&#039;');
 }
 
-function formatAmount(value, currency = 'TWD') {
+function formatAmount(value, currency = '$') {
   const amount = Number(value || 0);
-  return `${amount.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
+  return `${currency} ${amount.toLocaleString('zh-TW', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} `;
 }
 
 function getRecordDate(record) {
@@ -71,7 +71,7 @@ function getFilteredRecords() {
     return matchesYear && matchesMonth && matchesBank && matchesStock;
   });
 }
-
+//搜尋的下拉
 function updateFilterOptions() {
   const yearSelect = document.getElementById('filterYear');
   const bankSelect = document.getElementById('filterBank');
@@ -96,7 +96,7 @@ function updateFilterOptions() {
   yearSelect.value = years.includes(selectedYear) ? selectedYear : '';
   bankSelect.value = banks.includes(selectedBank) ? selectedBank : '';
 }
-
+//更新最上方總計
 function updateSummary() {
   const now = new Date();
   const thisYear = now.getFullYear();
@@ -117,7 +117,7 @@ function updateSummary() {
   document.getElementById('totalAll').textContent = formatAmount(totalAll);
   document.getElementById('recordCount').textContent = records.length;
 }
-
+// 更新表格的表尾
 function updateTableTotal(filteredRecords) {
   const totalAmount = filteredRecords.reduce((sum, record) => sum + Number(record.amount || 0), 0);
   const totalPerShare = filteredRecords.reduce((sum, record) => sum + Number(record.perShare || 0), 0);
@@ -126,8 +126,8 @@ function updateTableTotal(filteredRecords) {
   const countElement = document.getElementById('total-record-count');
 
   if (amountElement) amountElement.textContent = totalAmount.toLocaleString('zh-TW', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
   });
   if (perShareElement) perShareElement.textContent = totalPerShare.toLocaleString('zh-TW', {
     minimumFractionDigits: 4,
@@ -135,7 +135,7 @@ function updateTableTotal(filteredRecords) {
   });
   if (countElement) countElement.textContent = `${filteredRecords.length} 次`;
 }
-
+//刷新資料表
 function renderTable() {
   updateFilterOptions();
   updateSummary();
@@ -154,7 +154,7 @@ function renderTable() {
     }
     return sortState.direction === 'asc' ? result : -result;
   });
-
+  // 計算表格最下方的合計
   updateTableTotal(filteredRecords);
 
   const filteredCount = document.getElementById('filteredCount');
@@ -172,7 +172,7 @@ function renderTable() {
       <td>${escapeHtml(record.date)}</td>
       <td>${escapeHtml(record.stock)}</td>
       <td>${escapeHtml(record.bank)}</td>
-      <td class="amount-positive">${escapeHtml(formatAmount(record.amount, record.currency))}</td>
+      <td class="amount-positive">${escapeHtml(formatAmount(record.amount))}</td>
       <td><span class="badge ${currencyClass}">${escapeHtml(record.currency)}</span></td>
       <td>${escapeHtml(record.perShare || '-')}</td>
       <td>${escapeHtml(record.shares || '-')}</td>
@@ -182,7 +182,7 @@ function renderTable() {
     </tr>`;
   }).join('');
 }
-
+//新建一筆
 function addRecord() {
   const stock = document.getElementById('stockCode').value.trim();
   const date = document.getElementById('dividendDate').value;
@@ -215,7 +215,7 @@ function addRecord() {
   clearForm();
   renderTable();
 }
-
+//刪除一筆
 function deleteRecord(id) {
   const index = records.findIndex(record => String(record.id) === String(id));
   if (index < 0 || !confirm('確定要刪除此筆配息紀錄嗎？')) return;
