@@ -264,12 +264,28 @@ function exportCSV() {
   link.click();
   URL.revokeObjectURL(url);
 }
-
+// Start
 document.addEventListener('DOMContentLoaded', () => {
+  // 配息日期
   document.getElementById('dividendDate').value = new Date().toISOString().slice(0, 10);
-  renderTable();
-});
 
+  const params = new URLSearchParams(window.location.search);
+
+  // 由index.html 轉跳而來
+  const s = params.get("s");
+  if(s){
+    renderTable();
+  }
+  else {
+    alert('請由首頁轉跳')
+    if (window.history.length > 1) {
+        history.back();
+    } else {
+        window.location.href = "/";
+    }
+  }
+
+});
 // 匯出資料 js
 function exportDataFile() {
 
@@ -299,7 +315,6 @@ function exportDataFile() {
 
     alert('已匯出 dividend-record.js！請覆蓋原始檔案。');
 }
-
 // --- 強制從 dividend-record.js 檔案重新載入 ---
 function reloadDataFromFile() {
 
