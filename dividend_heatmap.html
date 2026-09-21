@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>個人資金投資管理系統 - 配息來源占比與月現金流熱力圖</title>
+
+  <link rel="stylesheet" href="dividend-record.css" />
+<style>
+    .dashboard {
+        width: min(1200px, 100%);
+        margin: 0 auto;
+    }
+
+    .title {
+        margin-bottom: 6px;
+        font-size: 26px;
+        font-weight: 700;
+        color: #14452f;
+    }
+
+    .description {
+        margin-bottom: 18px;
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .card {
+        position: relative;
+        padding: 18px;
+        overflow-x: auto;
+        background: #ffffff;
+        border: 1px solid #e5ebe8;
+        border-radius: 16px;
+        box-shadow: 0 8px 25px rgba(20, 69, 47, 0.08);
+    }
+
+    canvas {
+        display: block;
+        min-width: 930px;
+        max-width: 100%;
+        border-radius: 12px;
+        cursor: pointer;
+    }
+
+    .tooltip {
+        position: fixed;
+        z-index: 9999;
+        display: none;
+        min-width: 220px;
+        max-width: 300px;
+        padding: 12px 14px;
+        pointer-events: none;
+        color: white;
+        background: rgba(15, 23, 42, 0.94);
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    .tooltip-title {
+        margin-bottom: 4px;
+        font-size: 15px;
+        font-weight: 700;
+    }
+
+    .tooltip-total {
+        margin-bottom: 7px;
+        color: #86efac;
+        font-weight: 700;
+    }
+
+    .tooltip-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .target-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: #edf7f1;
+        border-radius: 10px;
+    }
+
+    .target-box label {
+        color: #476657;
+        font-size: 14px;
+    }
+
+    .target-box input,
+    .target-box select {
+        width: 110px;
+        padding: 6px 8px;
+        color: #1f2937;
+        background: white;
+        border: 1px solid #cbd5e1;
+        border-radius: 7px;
+        outline: none;
+        font-size: 14px;
+    }
+
+    .target-box input:focus,
+    .target-box select:focus {
+        border-color: #22c55e;
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+    }
+
+    .legend {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .legend-color {
+        width: 120px;
+        height: 11px;
+        background: linear-gradient(
+            to right,
+            #edf7f1,
+            #a7d9b8,
+            #55b77a,
+            #14733b
+        );
+        border-radius: 8px;
+    }
+
+    .hint {
+        margin-left: auto;
+        color: #64748b;
+        font-size: 13px;
+    }
+
+</style>
+</head>
+
+<body>
+    <!-- 導覽列 -->
+    <nav>
+    <a href="index.html">📊 資金管理</a>
+    <a href="dividend-record.html?s=pop">💰 實際配息紀錄</a>
+    <a href="dividend_heatmap.html" class="active">🉐 現金配息熱力圖</a>
+    <!-- 可依原專案結構新增其他連結 -->
+    </nav>
+
+    <div class="container">
+        <div class="dashboard">
+
+            <div class="title">配息來源占比與月現金流熱力圖</div>
+
+            <div class="description">
+                滑鼠移到月份查看明細，點擊月份可固定下方的配息來源占比。
+            </div>
+
+            <div class="toolbar">
+
+                <div class="target-box">
+                    <label for="monthlyTarget">每月目標</label>
+
+                    <input
+                        id="monthlyTarget"
+                        type="number"
+                        min="10000"
+                        step="1000"
+                        value="20000"
+                    >
+
+                    <span>元</span>
+                </div>
+
+                <div class="target-box">
+                    <label for="heatmapYear">年度</label>
+                    <select id="heatmapYear" aria-label="熱力圖年度"></select>
+                </div>
+
+                <div class="legend">
+                    <span>低</span>
+                    <div class="legend-color"></div>
+                    <span>高</span>
+                </div>
+
+                <div class="target-box">
+                    <button class="btn btn-primary" onclick="reloadDataFromFile()">載入js</button>
+                </div>
+
+                <div class="hint">
+                    點擊月份切換配息來源
+                </div>
+
+            </div>
+            <div class="card">
+                <canvas id="dividendCanvas"></canvas>
+            </div>
+
+        </div>
+
+        <div id="tooltip" class="tooltip"></div>
+
+    </div>
+
+<script src="dividend-data.js"></script>
+<script>
+const DIVIDEND_STORAGE_KEY = "my_invest_app_dividendRecords";
+const STOCK_COLORS = [
+    "#166534", "#22c55e", "#84cc16", "#0ea5a4", "#38bdf8",
+    "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#64748b"
+];
+
+function loadDividendRecords() {
+    try {
+        const stored = localStorage.getItem(DIVIDEND_STORAGE_KEY);
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) return parsed;
+        }
+    } catch (error) {
+        console.error("無法載入配息紀錄", error);
+    }
+
+    return typeof DEFAULT_DATA !== "undefined" && Array.isArray(DEFAULT_DATA.realDividendList)
+        ? DEFAULT_DATA.realDividendList
+        : [];
+}
+
+function convertRecordsToHeatmapData(records) {
+    const grouped = new Map();
+    // 歷史資料需同時比對年度與月份，避免不同年份的配息混在一起。
+    records.forEach(record => {
+        const stockText = String(record.stock || "").trim();
+        const separatorIndex = stockText.indexOf("/");
+        const stock = separatorIndex >= 0
+            ? stockText.slice(0, separatorIndex).trim()
+            : stockText;
+        const name = separatorIndex >= 0
+            ? stockText.slice(separatorIndex + 1).trim()
+            : stockText;
+        const date = new Date(`${record.date}T00:00:00`);
+        const recordYear = date.getFullYear();
+        const monthIndex = date.getMonth();
+        const amount = Number(record.amount || 0);
+
+        if (recordYear !== selectedYear || !stock || !Number.isInteger(monthIndex) || !Number.isFinite(amount)) return;
+
+        if (!grouped.has(stock)) {
+            grouped.set(stock, {
+                stock,
+                name,
+                color: STOCK_COLORS[grouped.size % STOCK_COLORS.length],
+                dividends: Array(12).fill(0)
+            });
+        }
+
+        const item = grouped.get(stock);
+        if (name && item.name === stock) item.name = name;
+        item.dividends[monthIndex] += amount;
+    });
+
+    return [...grouped.values()];
+}
+
+const records = loadDividendRecords();
+const availableYears = [...new Set(records
+    .map(record => new Date(`${record.date}T00:00:00`).getFullYear())
+    .filter(year => Number.isInteger(year) && year > 0))]
+    .sort((a, b) => b - a);
+const currentYear = new Date().getFullYear();
+let selectedYear = currentYear;
+const yearInput = document.getElementById("heatmapYear");
+if (yearInput) {
+    yearInput.innerHTML = [...new Set([currentYear, ...availableYears])]
+        .map(year => `<option value="${year}">${year}</option>`)
+        .join("");
+    yearInput.value = String(selectedYear);
+}
+let dividendData = convertRecordsToHeatmapData(records);
+
+const canvas = document.getElementById("dividendCanvas");
+const ctx = canvas.getContext("2d");
+const tooltip = document.getElementById("tooltip");
+const targetInput = document.getElementById("monthlyTarget");
+
+const months = [
+    "1月", "2月", "3月", "4月",
+    "5月", "6月", "7月", "8月",
+    "9月", "10月", "11月", "12月"
+];
+
+const layout = {
+    width: 1080,
+    height: 650,
+
+    heatmapTitleY: 32,
+    heatmapY: 60,
+    heatmapHeight: 125,
+
+    detailTitleY: 245,
+    detailY: 275,
+
+    left: 42,
+    right: 42,
+    gap: 10
+};
+
+let selectedMonth = new Date().getMonth();
+let hoverMonth = null;
+let monthRects = [];
+
+function getMonthlyTotals() {
+    return months.map((_, monthIndex) => {
+        return dividendData.reduce((sum, stock) => {
+            return sum + (stock.dividends[monthIndex] || 0);
+        }, 0);
+    });
+}
+
+function getMonthSources(monthIndex) {
+    return dividendData
+        .map(stock => ({
+            stock: stock.stock,
+            name: stock.name,
+            color: stock.color,
+            amount: stock.dividends[monthIndex] || 0
+        }))
+        .filter(item => item.amount > 0)
+        .sort((a, b) => b.amount - a.amount);
+}
+
+function getHighestDividendMonth() {
+    const totals = getMonthlyTotals();
+
+    return totals.indexOf(Math.max(...totals));
+}
+
+function formatMoney(value) {
+    return Math.round(value).toLocaleString("zh-TW");
+}
+
+function setupCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.style.width = layout.width + "px";
+    canvas.style.height = layout.height + "px";
+
+    canvas.width = Math.floor(layout.width * dpr);
+    canvas.height = Math.floor(layout.height * dpr);
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function roundedRect(x, y, width, height, radius, fill, stroke) {
+    const r = Math.min(radius, width / 2, height / 2);
+
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + width - r, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+    ctx.lineTo(x + width, y + height - r);
+    ctx.quadraticCurveTo(
+        x + width,
+        y + height,
+        x + width - r,
+        y + height
+    );
+    ctx.lineTo(x + r, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+
+    if (fill) {
+        ctx.fillStyle = fill;
+        ctx.fill();
+    }
+
+    if (stroke) {
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+}
+
+function mixColor(startColor, endColor, ratio) {
+    const value = Math.max(0, Math.min(1, ratio));
+
+    const start = hexToRgb(startColor);
+    const end = hexToRgb(endColor);
+
+    const red = Math.round(
+        start.r + (end.r - start.r) * value
+    );
+
+    const green = Math.round(
+        start.g + (end.g - start.g) * value
+    );
+
+    const blue = Math.round(
+        start.b + (end.b - start.b) * value
+    );
+
+    return `rgb(${red}, ${green}, ${blue})`;
+}
+
+function hexToRgb(hex) {
+    const value = hex.replace("#", "");
+
+    return {
+        r: parseInt(value.substring(0, 2), 16),
+        g: parseInt(value.substring(2, 4), 16),
+        b: parseInt(value.substring(4, 6), 16)
+    };
+}
+
+function draw() {
+    ctx.clearRect(0, 0, layout.width, layout.height);
+
+    drawBackground();
+    drawHeatmap();
+    drawSourceDetail();
+}
+
+function drawBackground() {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, layout.width, layout.height);
+}
+
+function drawHeatmap() {
+    const totals = getMonthlyTotals();
+    const maxTotal = Math.max(...totals, 1);
+
+    const availableWidth =
+        layout.width -
+        layout.left -
+        layout.right -
+        layout.gap * 11;
+
+    const cellWidth = availableWidth / 12;
+
+    monthRects = [];
+
+    ctx.fillStyle = "#173d2b";
+    ctx.font = "700 18px Microsoft JhengHei";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+
+    ctx.fillText(
+        "每月配息現金流",
+        layout.left,
+        layout.heatmapTitleY
+    );
+
+    totals.forEach((total, index) => {
+        const x =
+            layout.left +
+            index * (cellWidth + layout.gap);
+
+        const y = layout.heatmapY;
+
+        const ratio = total / maxTotal;
+
+        const color = total === 0
+            ? "#f1f5f3"
+            : mixColor("#dff3e6", "#126236", ratio);
+
+        const isSelected = index === selectedMonth;
+        const isHover = index === hoverMonth;
+
+        if (isSelected || isHover) {
+            ctx.shadowColor = "rgba(20, 90, 54, 0.25)";
+            ctx.shadowBlur = 12;
+            ctx.shadowOffsetY = 4;
+        }
+
+        roundedRect(
+            x,
+            y,
+            cellWidth,
+            layout.heatmapHeight,
+            12,
+            color,
+            isSelected ? "#0f5132" : "#dce7e1"
+        );
+
+        ctx.shadowColor = "transparent";
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+
+        ctx.textAlign = "center";
+
+        ctx.fillStyle = ratio > 0.55
+            ? "#ffffff"
+            : "#173d2b";
+
+        ctx.font = "700 15px Microsoft JhengHei";
+
+        ctx.fillText(
+            months[index],
+            x + cellWidth / 2,
+            y + 28
+        );
+
+        ctx.font = "700 16px Microsoft JhengHei";
+
+        ctx.fillText(
+            total === 0
+                ? "－"
+                : formatMoney(total),
+            x + cellWidth / 2,
+            y + 65
+        );
+
+        ctx.font = "12px Microsoft JhengHei";
+
+        ctx.fillText(
+            total === 0 ? "無配息" : "元",
+            x + cellWidth / 2,
+            y + 89
+        );
+
+        const target = Number(targetInput.value) || 0;
+        const achievement = target > 0
+            ? Math.round(total / target * 100)
+            : 0;
+
+        ctx.font = "11px Microsoft JhengHei";
+
+        ctx.fillText(
+            target > 0 ? `${achievement}%` : "",
+            x + cellWidth / 2,
+            y + 109
+        );
+
+        monthRects.push({
+            monthIndex: index,
+            x,
+            y,
+            width: cellWidth,
+            height: layout.heatmapHeight
+        });
+    });
+}
+
+function drawSourceDetail() {
+    const totals = getMonthlyTotals();
+    const total = totals[selectedMonth];
+    const sources = getMonthSources(selectedMonth);
+
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+
+    ctx.fillStyle = "#173d2b";
+    ctx.font = "700 18px Microsoft JhengHei";
+    ctx.fillText(
+        `${months[selectedMonth]}配息來源占比`,
+        layout.left,
+        layout.detailTitleY
+    );
+
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#15803d";
+    ctx.font = "700 18px Microsoft JhengHei";
+    ctx.fillText(
+        `總配息 ${formatMoney(total)} 元`,
+        layout.width - layout.right,
+        layout.detailTitleY
+    );
+
+    if (sources.length === 0) {
+        drawEmptyState();
+        return;
+    }
+
+    drawStackedBar(sources, total);
+    drawSourceRows(sources, total);
+}
+
+function drawStackedBar(sources, total) {
+    const x = layout.left;
+    const y = layout.detailY;
+    const width = layout.width - layout.left - layout.right;
+    const height = 44;
+
+    roundedRect(
+        x,
+        y,
+        width,
+        height,
+        12,
+        "#e5ebe8",
+        null
+    );
+
+    ctx.save();
+
+    roundedRect(
+        x,
+        y,
+        width,
+        height,
+        12,
+        null,
+        null
+    );
+
+    ctx.clip();
+
+    let currentX = x;
+
+    sources.forEach(source => {
+        const segmentWidth =
+            total > 0
+                ? width * source.amount / total
+                : 0;
+
+        ctx.fillStyle = source.color;
+        ctx.fillRect(
+            currentX,
+            y,
+            segmentWidth,
+            height
+        );
+
+        if (segmentWidth >= 60) {
+            const percent =
+                source.amount / total * 100;
+
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "700 12px Microsoft JhengHei";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            ctx.fillText(
+                `${percent.toFixed(0)}%`,
+                currentX + segmentWidth / 2,
+                y + height / 2
+            );
+        }
+
+        currentX += segmentWidth;
+    });
+
+    ctx.restore();
+}
+
+function drawSourceRows(sources, total) {
+    const startY = layout.detailY + 76;
+    const rowHeight = 55;
+
+    sources.forEach((source, index) => {
+        const y = startY + index * rowHeight;
+        const percentage = source.amount / total * 100;
+
+        if (index % 2 === 0) {
+            roundedRect(
+                layout.left,
+                y - 20,
+                layout.width -
+                    layout.left -
+                    layout.right,
+                45,
+                8,
+                "#f8faf9",
+                null
+            );
+        }
+
+        ctx.fillStyle = source.color;
+        ctx.beginPath();
+        ctx.arc(
+            layout.left + 12,
+            y + 2,
+            7,
+            0,
+            Math.PI * 2
+        );
+        ctx.fill();
+
+        ctx.textAlign = "left";
+        ctx.fillStyle = "#1f2937";
+        ctx.font = "700 14px Microsoft JhengHei";
+
+        ctx.fillText(
+            source.stock,
+            layout.left + 32,
+            y
+        );
+
+        ctx.fillStyle = "#64748b";
+        ctx.font = "13px Microsoft JhengHei";
+
+        ctx.fillText(
+            source.name,
+            layout.left + 100,
+            y
+        );
+
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#1f2937";
+        ctx.font = "700 14px Microsoft JhengHei";
+
+        ctx.fillText(
+            `${formatMoney(source.amount)} 元`,
+            layout.width - 140,
+            y
+        );
+
+        ctx.fillStyle = "#15803d";
+        ctx.font = "700 14px Microsoft JhengHei";
+
+        ctx.fillText(
+            `${percentage.toFixed(1)}%`,
+            layout.width - layout.right,
+            y
+        );
+    });
+}
+
+function drawEmptyState() {
+    const x = layout.left;
+    const y = layout.detailY;
+    const width =
+        layout.width -
+        layout.left -
+        layout.right;
+
+    roundedRect(
+        x,
+        y,
+        width,
+        150,
+        12,
+        "#f8faf9",
+        "#e2e8e5"
+    );
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "15px Microsoft JhengHei";
+
+    ctx.fillText(
+        "本月沒有配息資料",
+        layout.width / 2,
+        y + 75
+    );
+}
+
+function getCanvasPosition(event) {
+    const rect = canvas.getBoundingClientRect();
+
+    return {
+        x: (event.clientX - rect.left) *
+            (layout.width / rect.width),
+
+        y: (event.clientY - rect.top) *
+            (layout.height / rect.height)
+    };
+}
+
+function findMonthAtPosition(x, y) {
+    return monthRects.find(rect => {
+        return (
+            x >= rect.x &&
+            x <= rect.x + rect.width &&
+            y >= rect.y &&
+            y <= rect.y + rect.height
+        );
+    });
+}
+
+function showTooltip(event, monthIndex) {
+    const sources = getMonthSources(monthIndex);
+    const total = getMonthlyTotals()[monthIndex];
+    tooltip.innerHTML = `
+        <div class="tooltip-title">${months[monthIndex]}</div>
+        <div class="tooltip-total">總配息 ${formatMoney(total)} 元</div>
+        ${sources.map(source => `
+            <div class="tooltip-row">
+                <span>${source.stock} ${source.name}</span>
+                <strong>${formatMoney(source.amount)}</strong>
+            </div>
+        `).join("") || "<div>本月沒有配息資料</div>"}`;
+    tooltip.style.display = "block";
+    tooltip.style.left = `${Math.min(event.clientX + 14, window.innerWidth - 320)}px`;
+    tooltip.style.top = `${Math.min(event.clientY + 14, window.innerHeight - 180)}px`;
+}
+
+function hideTooltip() {
+    tooltip.style.display = "none";
+}
+
+function updateHover(event) {
+    const position = getCanvasPosition(event);
+    const rect = findMonthAtPosition(position.x, position.y);
+    hoverMonth = rect ? rect.monthIndex : null;
+    if (rect) showTooltip(event, rect.monthIndex);
+    else hideTooltip();
+    draw();
+}
+// 重新載入
+function reloadDataFromFile() {
+
+    localStorage.removeItem(DIVIDEND_STORAGE_KEY);
+    window.location.reload();
+}
+
+canvas.addEventListener("mousemove", updateHover);
+canvas.addEventListener("mouseleave", () => {
+    hoverMonth = null;
+    hideTooltip();
+    draw();
+});
+canvas.addEventListener("click", event => {
+    const position = getCanvasPosition(event);
+    const rect = findMonthAtPosition(position.x, position.y);
+    if (rect) {
+        selectedMonth = rect.monthIndex;
+        draw();
+    }
+});
+targetInput.addEventListener("input", draw);
+yearInput?.addEventListener("change", () => {
+    selectedYear = Number(yearInput.value);
+    dividendData = convertRecordsToHeatmapData(records);
+    selectedMonth = new Date().getMonth();
+    draw();
+});
+window.addEventListener("resize", () => {
+    setupCanvas();
+    draw();
+});
+
+setupCanvas();
+draw();
+</script>
+</body>
+</html>
+            
