@@ -73,6 +73,18 @@ const DEFAULT_DATA = {
             "note": ""
         },
         {
+            "id": "1789522908721-y83242afdis",
+            "stock": "00919 / 群益台灣精選",
+            "date": "2026-06-16",
+            "bank": "中信銀行",
+            "amount": 6000,
+            "currency": "TWD",
+            "perShare": "1",
+            "shares": "6000",
+            "taxStatus": "-",
+            "note": ""
+        },
+        {
             "id": "1789522908721-adtm1232ois",
             "stock": "00878 / 國泰永續高股息",
             "date": "2026-05-19",
@@ -159,7 +171,7 @@ const DEFAULT_DATA = {
         {
             "id": "1789522908721-1aaaa1tm6z12is",
             "stock": "00713 / 元大高息低波",
-            "date": "2025-11-18",
+            "date": "2025-12-19",
             "bank": "台灣銀行",
             "amount": 936,
             "currency": "TWD",
