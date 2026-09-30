@@ -239,7 +239,7 @@ function generateDividendRecords() {
 
         let shares = Number(stock.sharesBefore2026 || 0);
         stockTransactions.forEach(transaction => {
-          if (transaction.date <= date) {
+          if (transaction.date < date) { // 交易日期小於除息日當日
             const quantity = Number(transaction.shares || 0);
             shares += transaction.type === 'Buy' ? quantity : -quantity;
           }
