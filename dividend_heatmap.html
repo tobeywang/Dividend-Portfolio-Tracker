@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>個人資金投資管理系統 - 配息來源占比與月現金流熱力圖</title>
+<title>個人資金投資管理系統 - 收息來源占比與月現金流熱力圖</title>
 
   <link rel="stylesheet" href="dividend-record.css" />
 <style>
@@ -160,10 +160,10 @@
     <div class="container">
         <div class="dashboard">
 
-            <div class="title">配息來源占比與月現金流熱力圖</div>
+            <div class="title">收息來源占比與月現金流熱力圖</div>
 
             <div class="description">
-                滑鼠移到月份查看明細，點擊月份可固定下方的配息來源占比。
+                滑鼠移到月份查看明細，點擊月份可固定下方的收息來源占比。
             </div>
 
             <div class="toolbar">
@@ -198,7 +198,7 @@
                 </div>
 
                 <div class="hint">
-                    點擊月份切換配息來源
+                    點擊月份切換收息來源
                 </div>
 
             </div>
@@ -231,14 +231,13 @@ function loadDividendRecords() {
         console.error("無法載入配息紀錄", error);
     }
 
-    return typeof DEFAULT_DATA !== "undefined" && Array.isArray(DEFAULT_DATA.realDividendList)
-        ? DEFAULT_DATA.realDividendList
+    return typeof DIVIDEND_DEFAULT_DATA !== "undefined" && Array.isArray(DIVIDEND_DEFAULT_DATA.realDividendList)
+        ? DIVIDEND_DEFAULT_DATA.realDividendList
         : [];
 }
 
 function convertRecordsToHeatmapData(records) {
     const grouped = new Map();
-    // 歷史資料需同時比對年度與月份，避免不同年份的配息混在一起。
     records.forEach(record => {
         const stockText = String(record.stock || "").trim();
         const separatorIndex = stockText.indexOf("/");
@@ -248,7 +247,9 @@ function convertRecordsToHeatmapData(records) {
         const name = separatorIndex >= 0
             ? stockText.slice(separatorIndex + 1).trim()
             : stockText;
-        const date = new Date(`${record.date}T00:00:00`);
+        const exDate = new Date(`${record.date}T00:00:00`);
+        if (Number.isNaN(exDate.getTime())) return;
+        const date = new Date(exDate.getFullYear(), exDate.getMonth() + 1, 1);
         const recordYear = date.getFullYear();
         const monthIndex = date.getMonth();
         const amount = Number(record.amount || 0);
@@ -274,7 +275,10 @@ function convertRecordsToHeatmapData(records) {
 
 const records = loadDividendRecords();
 const availableYears = [...new Set(records
-    .map(record => new Date(`${record.date}T00:00:00`).getFullYear())
+    .map(record => {
+        const exDate = new Date(`${record.date}T00:00:00`);
+        return Number.isNaN(exDate.getTime()) ? NaN : new Date(exDate.getFullYear(), exDate.getMonth() + 1, 1).getFullYear();
+    })
     .filter(year => Number.isInteger(year) && year > 0))]
     .sort((a, b) => b - a);
 const currentYear = new Date().getFullYear();
@@ -457,7 +461,7 @@ function drawHeatmap() {
     ctx.textBaseline = "middle";
 
     ctx.fillText(
-        "每月配息現金流",
+        "每月收息現金流",
         layout.left,
         layout.heatmapTitleY
     );
@@ -564,7 +568,7 @@ function drawSourceDetail() {
     ctx.fillStyle = "#173d2b";
     ctx.font = "700 18px Microsoft JhengHei";
     ctx.fillText(
-        `${months[selectedMonth]}配息來源占比`,
+        `${months[selectedMonth]}收息來源占比`,
         layout.left,
         layout.detailTitleY
     );
