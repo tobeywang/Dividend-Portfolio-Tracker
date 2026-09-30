@@ -1249,7 +1249,7 @@ function renderAnalysis() {
             <div class="text-right">
                 <div class="font-bold text-blue-600">${fmt(curDiv)}</div>
                 ${estAdd > 0 ? `<div class="text-xs text-orange-500 font-bold">+${fmt(estAdd)} (預估)</div>` : ''}
-                <div class="text-xs text-slate-400">年總合: ${fmt(curDiv+estAdd)}</div>
+                <div class="text-xs text-slate-400">年總合(含預估): ${fmt(curDiv+estAdd)}</div>
             </div>
         </div>`;
     }).join('');
@@ -1267,6 +1267,7 @@ function renderTransactions() {
 
     const b = document.getElementById('table-transactions-body');
     const footerTotal = document.getElementById('tx-total-amount'); // 取得合計欄位
+    const footerCnt = document.getElementById('tx-total-cnt'); // 取得筆數欄位
     
     let sumTotal = 0; // 用來累加總金額
 
@@ -1287,7 +1288,10 @@ function renderTransactions() {
             </tr>`;
         }).join('');
     }
-
+    // 顯示筆數
+    if (footerCnt){
+        footerCnt.innerText = appData.transactions.length + ' 筆';
+    }
     // 2. 顯示合計金額
     if (footerTotal) {
         footerTotal.innerText = fmt(sumTotal);
