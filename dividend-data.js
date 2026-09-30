@@ -1,5 +1,5 @@
-const DEFAULT_DATA = { 
-    "realDividendList" :[
+const DIVIDEND_DEFAULT_DATA = {
+    "realDividendList": [
         {
             "id": "1789522908721-y8ttm6u2ois",
             "stock": "00713 / 元大高息低波",
@@ -179,6 +179,18 @@ const DEFAULT_DATA = {
             "shares": "1200",
             "taxStatus": "-",
             "note": ""
+        },
+        {
+            "id": "1790759182508-mxc7kxtdxtf",
+            "stock": "2882 / 國泰金",
+            "date": "2026-06-30",
+            "bank": "國泰",
+            "amount": 3500,
+            "currency": "TWD",
+            "perShare": "3.5",
+            "shares": "1000",
+            "taxStatus": "-",
+            "note": "依股利政策產生"
         }
     ]
 };
