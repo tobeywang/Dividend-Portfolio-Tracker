@@ -14,12 +14,12 @@ function loadRecords() {
             console.error('Load Error', e);
         }
     }
-    // html 載入時，已先載入了dividend-data.js，所以會有DEFAULT_DATA
+    // html 載入時，已先載入了dividend-data.js。
     if (
-        DEFAULT_DATA &&
-        Array.isArray(DEFAULT_DATA.realDividendList)
+      typeof DIVIDEND_DEFAULT_DATA !== 'undefined' &&
+      Array.isArray(DIVIDEND_DEFAULT_DATA.realDividendList)
     ) {
-        return structuredClone(DEFAULT_DATA.realDividendList);
+      return structuredClone(DIVIDEND_DEFAULT_DATA.realDividendList);
     }
 
     console.error('無法載入配息紀錄');
@@ -49,6 +49,12 @@ function getRecordDate(record) {
   return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
+function getCashDate(record) {
+  const date = new Date(`${record.date || ''}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Date(date.getFullYear(), date.getMonth() + 1, 1);
+}
+
 function getSortValue(record, key) {
   if (key === 'date') return getRecordDate(record);
   if (key === 'amount') return Number(record.amount || 0);
@@ -62,7 +68,8 @@ function getFilteredRecords() {
   const stock = (document.getElementById('filterStock')?.value || '').trim().toLocaleLowerCase('zh-TW');
 
   return records.filter(record => {
-    const date = new Date(`${record.date}T00:00:00`);
+    const date = getCashDate(record);
+    if (!date) return false;
     const matchesYear = !year || String(date.getFullYear()) === year;
     const matchesMonth = !month || String(date.getMonth() + 1) === month;
     const matchesBank = !bank || record.bank === bank;
@@ -80,8 +87,9 @@ function updateFilterOptions() {
   const selectedYear = yearSelect.value;
   const selectedBank = bankSelect.value;
   const years = [...new Set(records
-    .map(record => String(record.date || '').slice(0, 4))
-    .filter(year => /^\d{4}$/.test(year)))]
+    .map(record => getCashDate(record)?.getFullYear())
+    .filter(year => Number.isInteger(year))
+    .map(String))]
     .sort((a, b) => Number(b) - Number(a));
   const banks = [...new Set(records.map(record => record.bank).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b, 'zh-TW'));
@@ -102,11 +110,12 @@ function updateSummary() {
   const thisYear = now.getFullYear();
   const thisMonth = now.getMonth() + 1;
   const totalThisYear = records
-    .filter(record => String(record.date || '').startsWith(String(thisYear)))
+    .filter(record => getCashDate(record)?.getFullYear() === thisYear)
     .reduce((sum, record) => sum + Number(record.amount || 0), 0);
   const totalThisMonth = records
     .filter(record => {
-      const date = new Date(`${record.date}T00:00:00`);
+      const date = getCashDate(record);
+      if (!date) return false;
       return date.getFullYear() === thisYear && date.getMonth() + 1 === thisMonth;
     })
     .reduce((sum, record) => sum + Number(record.amount || 0), 0);
@@ -182,6 +191,91 @@ function renderTable() {
     </tr>`;
   }).join('');
 }
+
+function generateDividendRecords() {
+  if (typeof DEFAULT_DATA === 'undefined' || !Array.isArray(DEFAULT_DATA.portfolio)) {
+    alert('找不到 data.js 中的投資組合資料');
+    return;
+  }
+
+  const transactions = Array.isArray(DEFAULT_DATA.transactions) ? DEFAULT_DATA.transactions : [];
+  const bankNames = {
+    '台灣': '台灣銀行',
+    '台新': '台新銀行',
+    '中信': '中信銀行',
+    '國泰': '國泰'
+  };
+  const existingKeys = new Set(records.map(record => {
+    const code = String(record.stock || '').split('/')[0].trim();
+    return `${code}|${String(record.date || '').slice(0, 7)}`;
+  }));
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const generated = [];
+
+  DEFAULT_DATA.portfolio.forEach(stock => {
+    const code = String(stock.code || '').trim();
+    if (!code) return;
+
+    const months = String(stock.months || '').split(',')
+      .map(month => Number(month.trim()))
+      .filter(month => Number.isInteger(month) && month >= 1 && month <= 12);
+    const dividends = Array.isArray(stock.divs) ? stock.divs : [];
+    const dividendDates = Array.isArray(stock.divDates) ? stock.divDates : [];
+    const stockTransactions = transactions
+      .filter(transaction => String(transaction.code) === code && /^2026-\d{2}-\d{2}$/.test(transaction.date))
+      .sort((first, second) => first.date.localeCompare(second.date));
+
+    months.forEach((month, index) => {
+      const perShare = Number(dividends[index] ?? (Number(stock.div || 0) / months.length));
+      if (!(perShare > 0)) return;
+
+      for (let year = 2026; year <= today.getFullYear(); year += 1) {
+        const lastDay = new Date(year, month, 0).getDate();
+        const day = Math.min(Math.max(Number(dividendDates[index]) || 15, 1), lastDay);
+        const date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const key = `${code}|${date.slice(0, 7)}`;
+        if (date > todayKey || existingKeys.has(key)) continue;
+
+        let shares = Number(stock.sharesBefore2026 || 0);
+        stockTransactions.forEach(transaction => {
+          if (transaction.date <= date) {
+            const quantity = Number(transaction.shares || 0);
+            shares += transaction.type === 'Buy' ? quantity : -quantity;
+          }
+        });
+        if (!(shares > 0)) continue;
+
+        generated.push({
+          id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          stock: `${code} / ${stock.name || ''}`.trim(),
+          date,
+          bank: bankNames[stock.saveBank] || stock.saveBank || '其他',
+          amount: Math.round(shares * perShare),
+          currency: 'TWD',
+          perShare: String(perShare),
+          shares: String(shares),
+          taxStatus: '-',
+          note: '依股利政策產生'
+        });
+        existingKeys.add(key);
+      }
+    });
+  });
+
+  if (!generated.length) {
+    alert('沒有新的配息紀錄可產生');
+    return;
+  }
+  console.log(generated)
+  if (!confirm(`將新增 ${generated.length} 筆配息紀錄，已存在的股票與日期不會重複新增。是否繼續？`)) return;
+  
+  records.push(...generated);
+  saveRecords();
+  renderTable();
+  alert(`已新增 ${generated.length} 筆配息紀錄`);
+}
+
 //新建一筆
 function addRecord() {
   const stock = document.getElementById('stockCode').value.trim();
@@ -294,7 +388,7 @@ function exportDataFile() {
     };
 
     const content =
-`const DEFAULT_DATA = ${JSON.stringify(data, null, 4)};`;
+`const DIVIDEND_DEFAULT_DATA = ${JSON.stringify(data, null, 4)};`;
 
     const blob = new Blob(
         [content],
@@ -305,7 +399,7 @@ function exportDataFile() {
 
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'dividend-record.js';
+    link.download = 'dividend-data.js';
 
     document.body.appendChild(link);
     link.click();
@@ -313,13 +407,13 @@ function exportDataFile() {
 
     URL.revokeObjectURL(url);
 
-    alert('已匯出 dividend-record.js！請覆蓋原始檔案。');
+    alert('已匯出 dividend-data.js！請覆蓋原始檔案。');
 }
 // --- 強制從 dividend-record.js 檔案重新載入 ---
 function reloadDataFromFile() {
 
     if (!confirm(
-        "這將捨棄所有未匯出的資料，並重新載入 dividend-record.js。\n\n確定繼續？"
+        "這將捨棄所有未匯出的資料，並重新載入 dividend-data.js。\n\n確定繼續？"
     )) {
         return;
     }
