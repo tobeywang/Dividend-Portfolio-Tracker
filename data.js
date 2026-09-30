@@ -7,13 +7,14 @@ const DEFAULT_DATA = {
             "name": "元大台灣50(國泰證+中信證)",
             "cost": 489894,
             "shares": 9630,
+            "sharesBefore2026": 7795,
             "estShares": 70,
             "div": 1.6,
             "divs": [
                 1,
                 0.6
             ],
-            "price": 112.45,
+            "price": 111.3,
             "months": "1,7",
             "divDates": [
                 22,
@@ -33,6 +34,7 @@ const DEFAULT_DATA = {
             "name": "國泰永續高股息",
             "cost": 400235,
             "shares": 18000,
+            "sharesBefore2026": 16000,
             "estShares": 0,
             "div": 2.4899999999999998,
             "divs": [
@@ -41,7 +43,7 @@ const DEFAULT_DATA = {
                 1.01,
                 0.4
             ],
-            "price": 35.09,
+            "price": 34.83,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -65,6 +67,7 @@ const DEFAULT_DATA = {
             "name": "元大高息低波",
             "cost": 103317,
             "shares": 2000,
+            "sharesBefore2026": 1230,
             "estShares": 0,
             "div": 4.43,
             "divs": [
@@ -73,7 +76,7 @@ const DEFAULT_DATA = {
                 1.25,
                 0.78
             ],
-            "price": 63.65,
+            "price": 62.9,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -97,6 +100,7 @@ const DEFAULT_DATA = {
             "name": "元大高股息",
             "cost": 307380,
             "shares": 8000,
+            "sharesBefore2026": 0,
             "estShares": 0,
             "div": 4.082,
             "divs": [
@@ -105,7 +109,7 @@ const DEFAULT_DATA = {
                 1.35,
                 0.866
             ],
-            "price": 56.6,
+            "price": 56.55,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -129,7 +133,8 @@ const DEFAULT_DATA = {
             "name": "群益台灣精選",
             "cost": 192091,
             "shares": 7600,
-            "estShares": 0,
+            "sharesBefore2026": 0,
+            "estShares": 400,
             "div": 3.42,
             "divs": [
                 0.78,
@@ -137,7 +142,7 @@ const DEFAULT_DATA = {
                 1.1,
                 0.54
             ],
-            "price": 32.06,
+            "price": 31.88,
             "months": "3,6,9,12",
             "divDates": [
                 18,
@@ -161,6 +166,7 @@ const DEFAULT_DATA = {
             "name": "國泰金",
             "cost": 35000,
             "shares": 1000,
+            "sharesBefore2026": 1000,
             "estShares": 0,
             "div": 3.5,
             "divs": [
@@ -426,7 +432,7 @@ const DEFAULT_DATA = {
             "date": "2026-04-29",
             "shares": 1000,
             "cost": 91.65,
-            "price": 112.45
+            "price": 111.3
         }
     ],
     "shortTerm_history": [
