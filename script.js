@@ -2550,6 +2550,8 @@ async function fetchTwseDivdendData() {
         // ADD 增加計算YoC
         allData = allData.map(p => ({
             ...p,
+            FullDate: p.Date,
+            Date: String(p.Date || '').slice(0, 7),
             YoC: getCurrentYield(
                 Number(p.CashDividend || 0),
                 Number(p.ClosingPrice || 0)
@@ -2632,7 +2634,7 @@ function syncDividendPolicyFromTwseResult(results) {
         const targetStock = appData.portfolio.find(p => String(p.code) === stockCode);
         if (!targetStock) return;
 
-        const dateStr = String(item.Date || '').trim();
+        const dateStr = String(item.Date || '').trim(); // 更新配息政策的日期
         const dateDigits = dateStr.replace(/\D/g, '');
         if (!dateDigits || dateDigits.length < 4) return;
 
@@ -2738,7 +2740,7 @@ function displayTwseDivdendResults(data, apiType) {
         const code = item.Code || '-';
         const name = item.n || item.Name || item.name || '-';        
 		// 除息日
-        const exDate = item.Date || '-';
+        const exDate = item.FullDate || item.Date || '-';
 		const logTime = item.UpdateTime
 		? new Date(item.UpdateTime).toLocaleString('zh-TW')
 		: '-';
@@ -2941,4 +2943,3 @@ window.addEventListener('DOMContentLoaded', () => {
 
     switchTab('dashboard'); 
 });
-
