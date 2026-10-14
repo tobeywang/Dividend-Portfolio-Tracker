@@ -5,23 +5,23 @@ const DEFAULT_DATA = {
             "id": 1,
             "code": "0050",
             "name": "元大台灣50(國泰證+中信證)",
-            "cost": 489894,
-            "shares": 9630,
+            "cost": 497737,
+            "shares": 9700,
             "sharesBefore2026": 7795,
-            "estShares": 70,
+            "estShares": 300,
             "div": 1.6,
             "divs": [
                 1,
                 0.6
             ],
-            "price": 111.3,
+            "price": 112.4,
             "months": "1,7",
             "divDates": [
                 22,
                 21
             ],
             "saveBank": "中信",
-            "targetPrice": 105,
+            "targetPrice": 112,
             "targetYield": 2,
             "divClosePrice": [
                 0,
@@ -43,7 +43,7 @@ const DEFAULT_DATA = {
                 1.01,
                 0.4
             ],
-            "price": 34.83,
+            "price": 35.34,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -76,7 +76,7 @@ const DEFAULT_DATA = {
                 1.25,
                 0.78
             ],
-            "price": 62.9,
+            "price": 64.2,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -102,20 +102,20 @@ const DEFAULT_DATA = {
             "shares": 8000,
             "sharesBefore2026": 0,
             "estShares": 0,
-            "div": 4.082,
+            "div": 4.936,
             "divs": [
                 0.866,
                 1,
                 1.35,
-                0.866
+                1.72
             ],
-            "price": 56.55,
+            "price": 58.55,
             "months": "1,4,7,10",
             "divDates": [
                 22,
                 23,
                 21,
-                23
+                22
             ],
             "saveBank": "中信",
             "targetPrice": 51.02,
@@ -124,17 +124,17 @@ const DEFAULT_DATA = {
                 0,
                 0,
                 0,
-                0
+                58.55
             ]
         },
         {
             "id": 6,
             "code": "00919",
             "name": "群益台灣精選",
-            "cost": 192091,
-            "shares": 7600,
+            "cost": 198433,
+            "shares": 7800,
             "sharesBefore2026": 0,
-            "estShares": 400,
+            "estShares": 1200,
             "div": 3.42,
             "divs": [
                 0.78,
@@ -142,7 +142,7 @@ const DEFAULT_DATA = {
                 1.1,
                 0.54
             ],
-            "price": 31.88,
+            "price": 32.4,
             "months": "3,6,9,12",
             "divDates": [
                 18,
@@ -172,7 +172,7 @@ const DEFAULT_DATA = {
             "divs": [
                 3.5
             ],
-            "price": 111.5,
+            "price": 114.5,
             "months": "6",
             "divDates": [
                 30
@@ -186,6 +186,22 @@ const DEFAULT_DATA = {
         }
     ],
     "transactions": [
+        {
+            "date": "2026-10-13",
+            "code": "0050",
+            "type": "Buy",
+            "shares": 70,
+            "price": 112,
+            "total": 7840
+        },
+        {
+            "date": "2026-10-05",
+            "code": "00919",
+            "type": "Buy",
+            "shares": 200,
+            "price": 31.7,
+            "total": 6340
+        },
         {
             "date": "2026-09-23",
             "code": "00919",
@@ -423,8 +439,8 @@ const DEFAULT_DATA = {
             "total": 10000
         }
     ],
-    "fundNewNav": "66.98",
-    "shortTermTargetDate": "2026-05-31",
+    "fundNewNav": 69.14,
+    "shortTermTargetDate": "2026-12-31",
     "shortTerm": [
         {
             "code": "0050",
@@ -432,7 +448,7 @@ const DEFAULT_DATA = {
             "date": "2026-04-29",
             "shares": 1000,
             "cost": 91.65,
-            "price": 111.3
+            "price": 112.4
         }
     ],
     "shortTerm_history": [
