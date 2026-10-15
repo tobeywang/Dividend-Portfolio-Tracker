@@ -1257,6 +1257,8 @@ function renderAnalysis() {
 // ======================== 配息分析 END =============================
 
 function renderTransactions() {
+    const transactions = Array.isArray(appData.transactions) ? appData.transactions : [];
+
     // 1. 處理下拉選單
     const select = document.getElementById('tx-code');
     if(select) {
@@ -1265,18 +1267,52 @@ function renderTransactions() {
         if(currentVal) select.value = currentVal;
     }
 
+    const yearFilter = document.getElementById('tx-filter-year');
+    const monthFilter = document.getElementById('tx-filter-month');
+    const codeFilter = document.getElementById('tx-filter-code');
+    const selectedYear = yearFilter?.value || '';
+    const selectedCode = codeFilter?.value || '';
+    const years = [...new Set(transactions
+        .map(transaction => String(transaction.date || '').slice(0, 4))
+        .filter(year => /^\d{4}$/.test(year)))].sort((a, b) => b.localeCompare(a));
+
+    if (yearFilter) {
+        yearFilter.replaceChildren(new Option('全部年份', ''), ...years.map(year => new Option(year, year)));
+        yearFilter.value = years.includes(selectedYear) ? selectedYear : '';
+    }
+
+    if (codeFilter) {
+        const codes = [...new Set(transactions.map(transaction => String(transaction.code || '')))]
+            .filter(Boolean).sort((a, b) => a.localeCompare(b));
+        codeFilter.replaceChildren(new Option('全部代號', ''), ...codes.map(code => {
+            const stock = appData.portfolio.find(item => String(item.code) === code);
+            return new Option(stock ? `${code} ${stock.name}` : code, code);
+        }));
+        codeFilter.value = codes.includes(selectedCode) ? selectedCode : '';
+    }
+
     const b = document.getElementById('table-transactions-body');
-    const footerTotal = document.getElementById('tx-total-amount'); // 取得合計欄位
-    const footerCnt = document.getElementById('tx-total-cnt'); // 取得筆數欄位
-    
-    let sumTotal = 0; // 用來累加總金額
+    const footerCnt = document.getElementById('tx-total-cnt');
+    const footerBuy = document.getElementById('tx-total-buy');
+    const footerSell = document.getElementById('tx-total-sell');
+    const footerNet = document.getElementById('tx-total-net');
+    const selectedMonth = monthFilter?.value || '';
+    const filteredTransactions = transactions
+        .map((transaction, index) => ({ transaction, index }))
+        .filter(({ transaction }) => {
+            const date = String(transaction.date || '');
+            return (!yearFilter?.value || date.slice(0, 4) === yearFilter.value)
+                && (!selectedMonth || date.slice(5, 7) === selectedMonth)
+                && (!codeFilter?.value || String(transaction.code) === codeFilter.value);
+        });
+    const buyTotal = filteredTransactions.reduce((sum, { transaction }) =>
+        sum + (transaction.type === 'Buy' ? Number(transaction.total || 0) : 0), 0);
+    const sellTotal = filteredTransactions.reduce((sum, { transaction }) =>
+        sum + (transaction.type === 'Sell' ? Number(transaction.total || 0) : 0), 0);
+    const netTotal = sellTotal - buyTotal;
 
     if(b) {
-        b.innerHTML = appData.transactions.map((t, idx) => {
-            // 累加金額 (注意：如果是賣出，邏輯上可能是負項，但通常交易記錄顯示成交額皆為正，視您需求)
-            // 這裡假設是統計「成交總值」(Volume)，所以都加正數
-            sumTotal += Number(t.total);
-
+        b.innerHTML = filteredTransactions.map(({ transaction: t, index }) => {
             return `<tr class="hover:bg-slate-50 border-b border-slate-50">
                 <td class="p-4 text-slate-500">${t.date}</td>
                 <td class="p-4 font-bold">${t.code}</td>
@@ -1284,22 +1320,24 @@ function renderTransactions() {
                 <td class="p-4 text-right">${t.shares}</td>
                 <td class="p-4 text-right">${t.price}</td>
                 <td class="p-4 text-right font-bold">${fmt(t.total)}</td>
-                <td class="p-4 text-right"><button onclick="deleteTransaction(${idx})" class="text-red-500 hover:text-red-700 px-2 py-1 text-xs rounded hover:bg-red-50">刪除</button></td>
+                <td class="p-4 text-right"><button onclick="deleteTransaction(${index})" class="text-red-500 hover:text-red-700 px-2 py-1 text-xs rounded hover:bg-red-50">刪除</button></td>
             </tr>`;
         }).join('');
     }
     // 顯示筆數
     if (footerCnt){
-        footerCnt.innerText = appData.transactions.length + ' 筆';
+        footerCnt.innerText = filteredTransactions.length + ' 筆';
     }
-    // 2. 顯示合計金額
-    if (footerTotal) {
-        footerTotal.innerText = fmt(sumTotal);
-        // Also update the colspan of the footer cell to match the new table structure
-        const footerCell = footerTotal.previousElementSibling;
-        if (footerCell) {
-            footerCell.colSpan = "6";
-        }
+    if (footerBuy) {
+        footerBuy.innerText = fmt(buyTotal);
+    }
+    if (footerSell) {
+        footerSell.innerText = fmt(sellTotal);
+    }
+    if (footerNet) {
+        footerNet.innerText = `${netTotal > 0 ? '+' : ''}${fmt(netTotal)}`;
+        footerNet.classList.remove('text-red-600', 'text-green-600', 'text-slate-700');
+        footerNet.classList.add(netTotal > 0 ? 'text-red-600' : netTotal < 0 ? 'text-green-600' : 'text-slate-700');
     }
 }
 
