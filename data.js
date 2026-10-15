@@ -5,10 +5,10 @@ const DEFAULT_DATA = {
             "id": 1,
             "code": "0050",
             "name": "元大台灣50(國泰證+中信證)",
-            "cost": 497737,
-            "shares": 9700,
+            "cost": 519565,
+            "shares": 9900,
             "sharesBefore2026": 7795,
-            "estShares": 300,
+            "estShares": 100,
             "div": 1.6,
             "divs": [
                 1,
@@ -65,8 +65,8 @@ const DEFAULT_DATA = {
             "id": 3,
             "code": "00713",
             "name": "元大高息低波",
-            "cost": 103317,
-            "shares": 2000,
+            "cost": 50759,
+            "shares": 1000,
             "sharesBefore2026": 1230,
             "estShares": 0,
             "div": 4.43,
@@ -134,7 +134,7 @@ const DEFAULT_DATA = {
             "cost": 198433,
             "shares": 7800,
             "sharesBefore2026": 0,
-            "estShares": 1200,
+            "estShares": 2200,
             "div": 3.42,
             "divs": [
                 0.78,
@@ -186,6 +186,30 @@ const DEFAULT_DATA = {
         }
     ],
     "transactions": [
+        {
+            "date": "2026-10-15",
+            "code": "00713",
+            "type": "Sell",
+            "shares": 1000,
+            "price": 65.7,
+            "total": 65700
+        },
+        {
+            "date": "2026-10-15",
+            "code": "0050",
+            "type": "Buy",
+            "shares": 100,
+            "price": 108.9,
+            "total": 10890
+        },
+        {
+            "date": "2026-10-15",
+            "code": "0050",
+            "type": "Buy",
+            "shares": 100,
+            "price": 109.3,
+            "total": 10930
+        },
         {
             "date": "2026-10-13",
             "code": "0050",
