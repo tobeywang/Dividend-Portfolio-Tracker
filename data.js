@@ -5,10 +5,10 @@ const DEFAULT_DATA = {
             "id": 1,
             "code": "0050",
             "name": "元大台灣50(國泰證+中信證)",
-            "cost": 519565,
-            "shares": 9900,
+            "cost": 530484,
+            "shares": 10000,
             "sharesBefore2026": 7795,
-            "estShares": 100,
+            "estShares": 0,
             "div": 1.6,
             "divs": [
                 1,
@@ -186,6 +186,14 @@ const DEFAULT_DATA = {
         }
     ],
     "transactions": [
+        {
+            "date": "2026-10-15",
+            "code": "0050",
+            "type": "Buy",
+            "shares": 100,
+            "price": 109.15,
+            "total": 10915
+        },
         {
             "date": "2026-10-15",
             "code": "00713",
