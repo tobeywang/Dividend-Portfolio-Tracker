@@ -14,7 +14,7 @@ const DEFAULT_DATA = {
                 1,
                 0.6
             ],
-            "price": 112.4,
+            "price": 107.25,
             "months": "1,7",
             "divDates": [
                 22,
@@ -43,7 +43,7 @@ const DEFAULT_DATA = {
                 1.01,
                 0.4
             ],
-            "price": 35.34,
+            "price": 34.88,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -76,7 +76,7 @@ const DEFAULT_DATA = {
                 1.25,
                 0.78
             ],
-            "price": 64.2,
+            "price": 64.85,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -98,8 +98,8 @@ const DEFAULT_DATA = {
             "id": 5,
             "code": "0056",
             "name": "元大高股息",
-            "cost": 307380,
-            "shares": 8000,
+            "cost": 370623,
+            "shares": 9100,
             "sharesBefore2026": 0,
             "estShares": 0,
             "div": 4.936,
@@ -109,7 +109,7 @@ const DEFAULT_DATA = {
                 1.35,
                 1.72
             ],
-            "price": 58.55,
+            "price": 57.45,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -124,7 +124,7 @@ const DEFAULT_DATA = {
                 0,
                 0,
                 0,
-                58.55
+                58.75
             ]
         },
         {
@@ -134,7 +134,7 @@ const DEFAULT_DATA = {
             "cost": 198433,
             "shares": 7800,
             "sharesBefore2026": 0,
-            "estShares": 2200,
+            "estShares": 1200,
             "div": 3.42,
             "divs": [
                 0.78,
@@ -142,7 +142,7 @@ const DEFAULT_DATA = {
                 1.1,
                 0.54
             ],
-            "price": 32.4,
+            "price": 32.09,
             "months": "3,6,9,12",
             "divDates": [
                 18,
@@ -172,7 +172,7 @@ const DEFAULT_DATA = {
             "divs": [
                 3.5
             ],
-            "price": 114.5,
+            "price": 110,
             "months": "6",
             "divDates": [
                 30
@@ -186,6 +186,30 @@ const DEFAULT_DATA = {
         }
     ],
     "transactions": [
+        {
+            "date": "2026-10-22",
+            "code": "0056",
+            "type": "Buy",
+            "shares": 300,
+            "price": 56.6,
+            "total": 16980
+        },
+        {
+            "date": "2026-10-22",
+            "code": "0056",
+            "type": "Buy",
+            "shares": 300,
+            "price": 56.9,
+            "total": 17070
+        },
+        {
+            "date": "2026-10-20",
+            "code": "0056",
+            "type": "Buy",
+            "shares": 500,
+            "price": 57.65,
+            "total": 28825
+        },
         {
             "date": "2026-10-15",
             "code": "0050",
@@ -471,7 +495,7 @@ const DEFAULT_DATA = {
             "total": 10000
         }
     ],
-    "fundNewNav": 69.14,
+    "fundNewNav": 65.62,
     "shortTermTargetDate": "2026-12-31",
     "shortTerm": [
         {
@@ -480,7 +504,7 @@ const DEFAULT_DATA = {
             "date": "2026-04-29",
             "shares": 1000,
             "cost": 91.65,
-            "price": 112.4
+            "price": 107.25
         }
     ],
     "shortTerm_history": [
