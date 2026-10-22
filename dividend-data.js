@@ -191,6 +191,18 @@ const DIVIDEND_DEFAULT_DATA = {
             "shares": "1000",
             "taxStatus": "-",
             "note": "依股利政策產生"
+        },
+        {
+            "id": "1792645154849-svl1gcote3l",
+            "stock": "0056 / 元大高股息",
+            "date": "2026-10-22",
+            "bank": "中信銀行",
+            "amount": 14620,
+            "currency": "TWD",
+            "perShare": "1.72",
+            "shares": "8500",
+            "taxStatus": "-",
+            "note": "依股利政策產生"
         }
     ]
 };
