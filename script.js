@@ -115,6 +115,8 @@ function getPortfolioSortValue(entry, key) {
         case 'pf': return (Number(entry.shares || 0) * Number(entry.price || 0)) - Number(entry.cost || 0);
         case 'yoc': return getYoC(entry.cost, entry.shares, entry.div);
         case 'cy': return getCurrentYield(entry.div, entry.price);
+        case 'rateReturn': return getrRateReture((Number(entry.shares || 0) * Number(entry.price || 0)) - Number(entry.cost || 0)
+            , entry.cost);
         default: return 0;
     }
 }
@@ -148,7 +150,8 @@ function updatePortfolioSortIndicators() {
         mv: '市值',
         pf: '損益',
         yoc: 'YoC',
-        cy: '現價殖利率(CY)'
+        cy: 'CY(YoC-CY)',
+        rateReturn:'Return (%)'
     };
 
     document.querySelectorAll('#view-portfolio [data-sort-key]').forEach(th => {
@@ -729,6 +732,7 @@ function renderPortfolio() {
         const yoc = p.isFund ? null : getYoC(p.cost, p.shares, p.div);
         const cy = p.isFund ? null : getCurrentYield(p.div, p.price);
         const diff = yoc - cy;
+        const rr = getrRateReture(pf, p.cost);
 
         return `<tr class="hover:bg-blue-50"><td class="p-4 font-bold text-blue-600">${p.code}</td><td class="p-4">${p.name}</td><td class="p-4 text-right">${Number(p.shares).toLocaleString()}</td><td class="p-4 text-right text-orange-600">+${Number(p.estShares||0).toLocaleString()}</td><td class="p-4 text-right">${fmt(p.cost)}</td><td class="p-4 text-right">${p.price}</td><td class="p-4 text-right font-bold">${fmt(mv)}</td><td class="p-4 text-right font-bold ${pf>=0?'text-red-500':'text-green-500'}">${fmt(pf)}</td>
     <!-- ✅ 成本殖利率:投入的本金，目前每年替你創造多少現金流 -->
@@ -740,7 +744,12 @@ function renderPortfolio() {
     <td class="p-4 text-right font-bold text-green-600">
         ${p.isFund ? '-' : `${cy.toFixed(2)}%(${diff > 0 ? '+' : ''}${diff.toFixed(2)}%)`}
     </td>
-</tr>`;
+
+    <!-- ✅ 未實現報酬率 -->
+        <td class="p-4 text-right font-bold text-blue-600">
+            ${`${rr.toFixed(2)}%`}
+        </td>
+    </tr>`;
     }).join('');
 
     // ✅ 總損益
@@ -1914,7 +1923,7 @@ function updateTargetDate(val) {
 }
 
 // 計算成本殖利率 (YoC) 總成本,張數,每股股利\
-// 殖利率 = 年股利 ÷ 買入成本
+// 成本殖利率 = 年股利 ÷ 買入成本
 function getYoC(cost, shares, dividend){
     if(!cost || !shares) return 0;
 
@@ -1928,6 +1937,14 @@ function getCurrentYield(dividend, currentPrice){
     if(!currentPrice) return 0;
     return (dividend / currentPrice) * 100;
 }
+
+// 未實現報酬 (Rate Return)
+// 未實現報酬 = 損益 ÷ 成本
+function getrRateReture(pf, cost){
+    if(!cost) return 0;
+    return (pf / cost) * 100;
+}
+
 
 //判斷股票是什麼類型：如成本殖利率 > 6% 就是配息型，> 0%就是市值型，暫沒有其他投資(如債券)
 // targetYield 預設值 "yoc" 代表以成本殖利率作為判斷依據，反之用現價殖利率作為判斷依據
