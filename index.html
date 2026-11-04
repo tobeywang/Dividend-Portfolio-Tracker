@@ -317,8 +317,9 @@
                         <th class="p-4 text-right cursor-pointer select-none" data-sort-key="price"></th>
                         <th class="p-4 text-right cursor-pointer select-none" data-sort-key="mv"></th>
                         <th class="p-4 text-right cursor-pointer select-none" data-sort-key="pf"></th>
-                        <th class="p-4 text-right cursor-pointer select-none" data-sort-key="yoc"></th>
-                        <th class="p-4 text-right cursor-pointer select-none" data-sort-key="cy"></th>
+                        <th class="p-4 text-right cursor-pointer select-none" data-sort-key="yoc" title="成本殖利率"></th>
+                        <th class="p-4 text-right cursor-pointer select-none" data-sort-key="cy" title="現價殖利率"></th>
+                        <th class="p-4 text-right cursor-pointer select-none" data-sort-key="rateReturn" title="未實現報酬率"></th>
                     </tr>
                 </thead>
                 <tbody id="table-portfolio-body" class="divide-y divide-slate-100 text-sm"></tbody>
@@ -442,6 +443,16 @@
                                     <div class="flex justify-between gap-2"><span>賣出總額</span><span id="tx-total-sell">0</span></div>
                                     <div class="flex justify-between gap-2"><span>淨額（S − B）</span><span class="text-slate-700" id="tx-total-net">0</span></div>
                                 </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="7" class="p-3">
+                                <div id="tx-cost-summary" class="flex justify-between gap-2 text-sm"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="7" class="p-3">
+                                <div id="tx-return-summary" class="flex justify-between gap-2 text-sm"></div>
                             </td>
                         </tr>
                     </tfoot>
