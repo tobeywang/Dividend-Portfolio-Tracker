@@ -1305,6 +1305,8 @@ function renderTransactions() {
     const footerBuy = document.getElementById('tx-total-buy');
     const footerSell = document.getElementById('tx-total-sell');
     const footerNet = document.getElementById('tx-total-net');
+    const footerCost = document.getElementById('tx-cost-summary');
+    const footerReturn = document.getElementById('tx-return-summary');
     const selectedMonth = monthFilter?.value || '';
     const filteredTransactions = transactions
         .map((transaction, index) => ({ transaction, index }))
@@ -1319,6 +1321,35 @@ function renderTransactions() {
     const sellTotal = filteredTransactions.reduce((sum, { transaction }) =>
         sum + (transaction.type === 'Sell' ? Number(transaction.total || 0) : 0), 0);
     const netTotal = sellTotal - buyTotal;
+    const stockStats = new Map();
+    filteredTransactions.forEach(({ transaction }) => {
+        const code = String(transaction.code || '');
+        if (!code) return;
+        const stats = stockStats.get(code) || { buyAmount: 0, buyShares: 0, netShares: 0 };
+        const shares = Number(transaction.shares || 0);
+        if (transaction.type === 'Buy') {
+            stats.buyAmount += Number(transaction.total || 0);
+            stats.buyShares += shares;
+            stats.netShares += shares;
+        } else if (transaction.type === 'Sell') {
+            stats.netShares -= shares;
+        }
+        stockStats.set(code, stats);
+    });
+    const priceFormatter = new Intl.NumberFormat('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const currentHoldings = [...stockStats.entries()].map(([code, stats]) => {
+        const stock = appData.portfolio.find(item => String(item.code) === code);
+        const averageCost = stats.buyShares ? stats.buyAmount / stats.buyShares : 0;
+        const shares = Math.max(stats.netShares, 0);
+        const cost = averageCost * shares;
+        const referencePrice = Number(stock?.price || 0);
+        const marketValue = referencePrice * shares;
+        return { code, averageCost, shares, cost, referencePrice, marketValue, hasPrice: referencePrice > 0 };
+    });
+    const totalMarketValue = currentHoldings.reduce((sum, item) => sum + (item.hasPrice ? item.marketValue : 0), 0);
+    const pricedCost = currentHoldings.reduce((sum, item) => sum + (item.hasPrice ? item.cost : 0), 0);
+    const unrealizedReturn = totalMarketValue - pricedCost;
+    const returnRate = pricedCost ? (unrealizedReturn / pricedCost) * 100 : 0;
 
     if(b) {
         b.innerHTML = filteredTransactions.map(({ transaction: t, index }) => {
@@ -1347,6 +1378,18 @@ function renderTransactions() {
         footerNet.innerText = `${netTotal > 0 ? '+' : ''}${fmt(netTotal)}`;
         footerNet.classList.remove('text-red-600', 'text-green-600', 'text-slate-700');
         footerNet.classList.add(netTotal > 0 ? 'text-red-600' : netTotal < 0 ? 'text-green-600' : 'text-slate-700');
+    }
+    if (footerCost) {
+        const costSummary = currentHoldings.length
+            ? currentHoldings.map(item => `${item.code}: 平均成本 ${item.averageCost ? priceFormatter.format(item.averageCost) : '--'} / 參考價 ${item.hasPrice ? priceFormatter.format(item.referencePrice) : '--'}`).join('、')
+            : '--';
+        footerCost.innerHTML = `<span>各代號平均成本 / 參考價</span><span class="text-right">${costSummary}</span>`;
+    }
+    if (footerReturn) {
+        const returnSummary = pricedCost
+            ? `${fmt(totalMarketValue)} / ${fmt(unrealizedReturn)} / ${returnRate.toFixed(2)}%`
+            : '--';
+        footerReturn.innerHTML = `<span>短期市值 / 未實現損益 / 報酬率</span><span class="font-bold ${unrealizedReturn > 0 ? 'text-red-600' : unrealizedReturn < 0 ? 'text-green-600' : 'text-slate-700'}">${returnSummary}</span>`;
     }
 }
 
