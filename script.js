@@ -100,6 +100,8 @@ const fmt = (n) => new Intl.NumberFormat('zh-TW', { style: 'currency', currency:
 // 排序表格
 const portfolioSortState = { key: 'mv', direction: 'desc' };
 const dividendSortState = { key: 'Date', direction: 'desc' };
+const twseSortState = { key: 'code', direction: 'asc' };
+let currentTwseData = [];
 let currentDividendData = [];
 let currentDividendApiType = 'last';
 
@@ -2348,6 +2350,9 @@ async function fetchTwseData() {
     // UI 重置
     msgDiv.innerHTML = ''; 
     resultsDiv.innerHTML = ''; 
+    currentTwseData = [];
+    twseSortState.key = 'code';
+    twseSortState.direction = 'asc';
     statsDiv.classList.add('hidden'); 
     resultsDiv.classList.add('hidden');
     loadingDiv.classList.remove('hidden'); 
@@ -2385,6 +2390,7 @@ async function fetchTwseData() {
         }
 
         // 4. 顯示結果
+        currentTwseData = filteredData;
         displayTwseResults(filteredData, apiType);
 
         // 5.自動將查詢結果同步回持股設定
@@ -2413,6 +2419,12 @@ function displayTwseResults(data, apiType) {
     resultsDiv.classList.remove('hidden');
     statsDiv.classList.remove('hidden');
 
+    const label = (text, key) => {
+        const active = twseSortState.key === key;
+        const arrow = active ? (twseSortState.direction === 'asc' ? ' ↑' : ' ↓') : '';
+        return `${text}${arrow}`;
+    };
+
     let html = `
         <div class="p-3 bg-gray-50 border-b text-sm text-gray-500 sticky left-0">
             共找到 <b>${data.length}</b> 筆資料
@@ -2421,13 +2433,13 @@ function displayTwseResults(data, apiType) {
             <thead class="bg-teal-50 text-teal-800 text-sm font-bold">
                 <tr>
                     <!-- 關鍵修改：加入 sticky top-0 z-10 來凍結標題 -->
-                    <th class="p-3 sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">代號</th>
-                    <th class="p-3 sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">名稱</th>
-                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">成交價</th>
-                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">漲跌</th>
-                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">幅度(%)</th>
-                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">成交量</th>
-                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm">時間</th>
+                    <th class="p-3 sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm cursor-pointer select-none" onclick="sortTwseTable('code')">${label('代號', 'code')}</th>
+                    <th class="p-3 sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm cursor-pointer select-none" onclick="sortTwseTable('name')">${label('名稱', 'name')}</th>
+                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm cursor-pointer select-none" onclick="sortTwseTable('price')">${label('成交價', 'price')}</th>
+                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm cursor-pointer select-none" onclick="sortTwseTable('change')">${label('漲跌', 'change')}</th>
+                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm cursor-pointer select-none" onclick="sortTwseTable('percent')">${label('幅度(%)', 'percent')}</th>
+                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm cursor-pointer select-none" onclick="sortTwseTable('volume')">${label('成交量', 'volume')}</th>
+                    <th class="p-3 text-right sticky top-0 z-10 bg-teal-50 border-b border-teal-200 shadow-sm cursor-pointer select-none" onclick="sortTwseTable('time')">${label('時間', 'time')}</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 text-sm">`;
@@ -2500,11 +2512,48 @@ function displayTwseResults(data, apiType) {
     document.getElementById('totalAmount').textContent = totalVol.toLocaleString();
 }
 
+function getTwseSortValue(item, key) {
+    const price = parseFloat(item.z || item.Price || item.ClosingPrice);
+    const change = parseFloat(item.Change || 0);
+
+    switch (key) {
+        case 'code': return String(item.c || item.Code || item.code || '');
+        case 'name': return String(item.n || item.Name || item.name || '');
+        case 'price': return Number.isNaN(price) ? 0 : price;
+        case 'change': return Number.isNaN(change) ? 0 : change;
+        case 'percent': return !Number.isNaN(price) && price - change > 0 ? (change / (price - change)) * 100 : 0;
+        case 'volume': return parseInt(item.v || item.Volume || item.TradeVolume || '0', 10) || 0;
+        case 'time': return String(item.t || item.Date || '');
+        default: return 0;
+    }
+}
+
+function sortTwseTable(key) {
+    if (twseSortState.key === key) {
+        twseSortState.direction = twseSortState.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        twseSortState.key = key;
+        twseSortState.direction = ['code', 'name', 'time'].includes(key) ? 'asc' : 'desc';
+    }
+
+    const sortedData = [...currentTwseData].sort((a, b) => {
+        const aValue = getTwseSortValue(a, key);
+        const bValue = getTwseSortValue(b, key);
+        const result = typeof aValue === 'string'
+            ? aValue.localeCompare(bValue, 'zh-Hant')
+            : aValue - bValue;
+        return twseSortState.direction === 'asc' ? result : -result;
+    });
+
+    displayTwseResults(sortedData, document.getElementById('apiType').value);
+}
+
 function clearTwseResults() {
     document.getElementById('twse-message').innerHTML = '';
     document.getElementById('twse-results').innerHTML = '';
     document.getElementById('twse-results').classList.add('hidden');
     document.getElementById('twse-stats').classList.add('hidden');
+    currentTwseData = [];
 }
 
 /**
