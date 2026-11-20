@@ -14,7 +14,7 @@ const DEFAULT_DATA = {
                 1,
                 0.6
             ],
-            "price": 99.85,
+            "price": 90.2,
             "months": "1,7",
             "divDates": [
                 22,
@@ -43,7 +43,7 @@ const DEFAULT_DATA = {
                 1.01,
                 1.25
             ],
-            "price": 33.61,
+            "price": 29.78,
             "months": "2,5,8,11",
             "divDates": [
                 26,
@@ -52,13 +52,13 @@ const DEFAULT_DATA = {
                 17
             ],
             "saveBank": "台新",
-            "targetPrice": 33.61,
+            "targetPrice": 30.86,
             "targetYield": 10,
             "divClosePrice": [
                 0,
                 0,
                 33.75,
-                33.61
+                32.43
             ]
         },
         {
@@ -76,7 +76,7 @@ const DEFAULT_DATA = {
                 1.25,
                 0.78
             ],
-            "price": 64,
+            "price": 60.8,
             "months": "3,6,9,12",
             "divDates": [
                 21,
@@ -109,7 +109,7 @@ const DEFAULT_DATA = {
                 1.35,
                 1.72
             ],
-            "price": 53.05,
+            "price": 47.41,
             "months": "1,4,7,10",
             "divDates": [
                 22,
@@ -118,7 +118,7 @@ const DEFAULT_DATA = {
                 22
             ],
             "saveBank": "中信",
-            "targetPrice": 50.37,
+            "targetPrice": 49.92,
             "targetYield": 10,
             "divClosePrice": [
                 0,
@@ -142,7 +142,7 @@ const DEFAULT_DATA = {
                 1.1,
                 0.54
             ],
-            "price": 31.26,
+            "price": 29.15,
             "months": "3,6,9,12",
             "divDates": [
                 18,
@@ -151,7 +151,7 @@ const DEFAULT_DATA = {
                 16
             ],
             "saveBank": "中信",
-            "targetPrice": 31.26,
+            "targetPrice": 30.39,
             "targetYield": 11,
             "divClosePrice": [
                 0,
@@ -435,7 +435,7 @@ const DEFAULT_DATA = {
             "total": 21908
         },
         {
-            "date": "2026-12-30",
+            "date": "2025-12-30",
             "code": "0050",
             "type": "Buy",
             "shares": 502,
@@ -544,7 +544,7 @@ const DEFAULT_DATA = {
             "date": "2026-04-29",
             "shares": 1000,
             "cost": 91.65,
-            "price": 99.85
+            "price": 90.2
         }
     ],
     "shortTerm_history": [
