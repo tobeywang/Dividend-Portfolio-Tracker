@@ -772,6 +772,105 @@ function renderPortfolio() {
 
     bindPortfolioSortHandlers();
     updatePortfolioSortIndicators();
+    renderSingleStockRebalance();
+}
+
+function renderSingleStockRebalance() {
+    const body = document.getElementById('single-stock-rebalance-body');
+    const startMonthInput = document.getElementById('single-rebalance-start-month');
+    if (!body || !startMonthInput) return;
+
+    if (!appData.singleStockRebalance || typeof appData.singleStockRebalance !== 'object') {
+        appData.singleStockRebalance = {};
+    }
+    const settings = appData.singleStockRebalance;
+    if (!settings.buyPrices || typeof settings.buyPrices !== 'object') settings.buyPrices = {};
+
+    const transactions = Array.isArray(appData.transactions) ? appData.transactions : [];
+    const transactionMonths = [...new Set(transactions
+        .map(transaction => String(transaction.date || '').slice(0, 7))
+        .filter(month => /^\d{4}-\d{2}$/.test(month)))].sort();
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    if (!settings.startMonth) settings.startMonth = transactionMonths[0] || currentMonth;
+    startMonthInput.value = settings.startMonth;
+
+    const startDate = `${settings.startMonth}-01`;
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const priceFormatter = new Intl.NumberFormat('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    body.innerHTML = appData.portfolio.map(stock => {
+        const code = String(stock.code || '');
+        const stats = transactions.reduce((result, transaction) => {
+            const date = String(transaction.date || '');
+            if (String(transaction.code) !== code || date < startDate || date > today) return result;
+
+            const shares = Number(transaction.shares || 0);
+            if (transaction.type === 'Buy') {
+                result.buyShares += shares;
+                result.buyAmount += Number(transaction.total ?? (Number(transaction.price || 0) * shares));
+                result.netShares += shares;
+            } else if (transaction.type === 'Sell') {
+                result.netShares -= shares;
+            }
+            return result;
+        }, { buyShares: 0, buyAmount: 0, netShares: 0 });
+
+        const averageCost = stats.buyShares > 0 ? stats.buyAmount / stats.buyShares : 0;
+        const shares = Math.max(stats.netShares, 0);
+        const referencePrice = Number(stock.price || 0);
+        const buyPrice = Number(settings.buyPrices[code] || 0);
+        const lossPerShare = averageCost - referencePrice;
+        const hasPosition = stats.buyShares > 0 && shares > 0;
+        let resultText = '--';
+        let capitalText = '--';
+
+        if (hasPosition && lossPerShare <= 0) {
+            resultText = '<span class="text-slate-500">無負向價差</span>';
+        } else if (hasPosition && referencePrice > 0 && buyPrice > 0) {
+            if (buyPrice >= referencePrice) {
+                resultText = '<span class="text-amber-600">買入價需低於參考價</span>';
+            } else {
+                const requiredShares = Math.ceil((lossPerShare * shares) / (referencePrice - buyPrice));
+                resultText = requiredShares.toLocaleString('zh-TW');
+                capitalText = fmt(requiredShares * buyPrice);
+            }
+        }
+
+        return `<tr>
+            <td class="p-3 font-bold text-blue-600">${code}</td>
+            <td class="p-3">${stock.name || ''}</td>
+            <td class="p-3 text-right">${hasPosition ? shares.toLocaleString('zh-TW') : '--'}</td>
+            <td class="p-3 text-right">${hasPosition ? priceFormatter.format(averageCost) : '--'}</td>
+            <td class="p-3 text-right">${referencePrice > 0 ? priceFormatter.format(referencePrice) : '--'}</td>
+            <td class="p-3 text-right ${lossPerShare > 0 ? 'text-green-600' : 'text-slate-500'}">${hasPosition && lossPerShare > 0 ? priceFormatter.format(lossPerShare) : '--'}</td>
+            <td class="p-3 text-right"><input type="number" min="0" step="0.01" value="${settings.buyPrices[code] || ''}" onchange="updateSingleStockRebalancePrice('${code}', this.value)" class="w-28 border border-slate-300 rounded px-2 py-1 text-right" aria-label="${code} 預計買入單價"></td>
+            <td class="p-3 text-right font-bold">${resultText}</td>
+            <td class="p-3 text-right font-bold text-blue-600">${capitalText}</td>
+        </tr>`;
+    }).join('');
+}
+
+function updateSingleStockRebalanceStart(value) {
+    if (!appData.singleStockRebalance || typeof appData.singleStockRebalance !== 'object') {
+        appData.singleStockRebalance = {};
+    }
+    appData.singleStockRebalance.startMonth = value;
+    saveData();
+    renderSingleStockRebalance();
+}
+
+function updateSingleStockRebalancePrice(code, value) {
+    if (!appData.singleStockRebalance || typeof appData.singleStockRebalance !== 'object') {
+        appData.singleStockRebalance = {};
+    }
+    if (!appData.singleStockRebalance.buyPrices || typeof appData.singleStockRebalance.buyPrices !== 'object') {
+        appData.singleStockRebalance.buyPrices = {};
+    }
+    const price = Number(value);
+    if (!value || !Number.isFinite(price) || price <= 0) delete appData.singleStockRebalance.buyPrices[code];
+    else appData.singleStockRebalance.buyPrices[code] = price;
+    saveData();
+    renderSingleStockRebalance();
 }
 // ======================== 投資組合再平衡建議 ====================
 // ==============================
@@ -1280,6 +1379,7 @@ function renderTransactions() {
 
     const yearFilter = document.getElementById('tx-filter-year');
     const monthFilter = document.getElementById('tx-filter-month');
+    const modeFilter = document.getElementById('tx-filter-mode');
     const codeFilter = document.getElementById('tx-filter-code');
     const selectedYear = yearFilter?.value || '';
     const selectedCode = codeFilter?.value || '';
@@ -1310,12 +1410,20 @@ function renderTransactions() {
     const footerCost = document.getElementById('tx-cost-summary');
     const footerReturn = document.getElementById('tx-return-summary');
     const selectedMonth = monthFilter?.value || '';
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const cumulativeStart = selectedMonth
+        ? `${yearFilter?.value || now.getFullYear()}-${selectedMonth}-01`
+        : '';
     const filteredTransactions = transactions
         .map((transaction, index) => ({ transaction, index }))
         .filter(({ transaction }) => {
             const date = String(transaction.date || '');
-            return (!yearFilter?.value || date.slice(0, 4) === yearFilter.value)
-                && (!selectedMonth || date.slice(5, 7) === selectedMonth)
+            const matchesPeriod = modeFilter?.value === 'cumulative' && cumulativeStart
+                ? date >= cumulativeStart && date <= today
+                : (!yearFilter?.value || date.slice(0, 4) === yearFilter.value)
+                    && (!selectedMonth || date.slice(5, 7) === selectedMonth);
+            return matchesPeriod
                 && (!codeFilter?.value || String(transaction.code) === codeFilter.value);
         });
     const buyTotal = filteredTransactions.reduce((sum, { transaction }) =>
