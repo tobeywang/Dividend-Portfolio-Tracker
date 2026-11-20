@@ -359,6 +359,36 @@
                 </div>
             </div>
 
+            <!-- === 新增區塊：單股投資再平衡 === -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mt-6">
+                <div class="flex flex-wrap items-end justify-between gap-4 mb-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800">單股投資再平衡</h2>
+                        <p class="text-xs text-slate-500 mt-1">依起算月份後的交易計算；不含起算日前持股、手續費與稅費。</p>
+                    </div>
+                    <label class="text-sm text-slate-600">起算年月
+                        <input type="month" id="single-rebalance-start-month" onchange="updateSingleStockRebalanceStart(this.value)" class="ml-2 bg-white border border-slate-300 rounded px-3 py-2">
+                    </label>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left whitespace-nowrap">
+                        <thead class="bg-slate-50 text-slate-600 text-xs font-bold border-y border-slate-200">
+                            <tr>
+                                <th class="p-3">代號</th>
+                                <th class="p-3">名稱</th>
+                                <th class="p-3 text-right">期間淨股數</th>
+                                <th class="p-3 text-right">平均買入價</th>
+                                <th class="p-3 text-right">參考價</th>
+                                <th class="p-3 text-right">負向價差</th>
+                                <th class="p-3 text-right">預計買入單價</th>
+                                <th class="p-3 text-right">回本所需股數</th>
+                                <th class="p-3 text-right">預計投入金額</th>
+                            </tr>
+                        </thead>
+                        <tbody id="single-stock-rebalance-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <!-- 3. Dividend Settings -->
@@ -409,6 +439,12 @@
                         <option value="07">7 月</option><option value="08">8 月</option>
                         <option value="09">9 月</option><option value="10">10 月</option>
                         <option value="11">11 月</option><option value="12">12 月</option>
+                    </select>
+                </label>
+                <label class="text-sm text-slate-600">統計方式
+                    <select id="tx-filter-mode" onchange="renderTransactions()" class="ml-2 bg-white border border-slate-300 rounded px-3 py-2">
+                        <option value="monthly">單月統計</option>
+                        <option value="cumulative">累計統計</option>
                     </select>
                 </label>
                 <label class="text-sm text-slate-600">代號
