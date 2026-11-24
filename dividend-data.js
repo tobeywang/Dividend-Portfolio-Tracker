@@ -203,6 +203,18 @@ const DIVIDEND_DEFAULT_DATA = {
             "shares": "8500",
             "taxStatus": "-",
             "note": "依股利政策產生"
+        },
+        {
+            "id": "1794964136092-8o8htj2kiq4",
+            "stock": "00878 / 國泰永續高股息",
+            "date": "2026-11-17",
+            "bank": "台新銀行",
+            "amount": 22500,
+            "currency": "TWD",
+            "perShare": "1.25",
+            "shares": "18000",
+            "taxStatus": "-",
+            "note": "依股利政策產生"
         }
     ]
 };
